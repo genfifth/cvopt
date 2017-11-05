@@ -18,12 +18,17 @@ ALWAYS_USED_FEATURE_GROUP_NAME = -100
 
 class BaseSearcher(BaseEstimator, metaclass=ABCMeta):
     """
-    score_summarizer
-        function([score per cv]) = score_summary
-    score_summarizer_name
-        name is used in logfile
-    feature_axis
-        feature_select target axis    
+    Base class of cross validation optimizer.
+
+    # Class variables
+    score_summarizer: function(scores per cv)
+        Score summarize function.
+
+    score_summarizer_name: str
+        This is used in logfile.
+
+    feature_axis: int
+        feature_select target axis. 
     """
     score_summarizer = np.mean
     score_summarizer_name = "mean"
@@ -159,7 +164,7 @@ class BaseSearcher(BaseEstimator, metaclass=ABCMeta):
 
 def mk_feature_select_params(feature_groups, n_samples, n_features):
     """
-    set param_distributions for feature_select
+    Set param_distributions for feature_select
     """
     if len(feature_groups) != n_features:
         raise Exception("feature_groups length must be equal to X length(n_sample)")
@@ -181,6 +186,9 @@ def mk_feature_select_params(feature_groups, n_samples, n_features):
 
 
 def mk_feature_select_index(params, feature_groups, verbose):
+    """
+    Make feature select index.
+    """
     true_group_names = []
     other_params = copy.deepcopy(params)
     feature_params = {}
@@ -200,8 +208,11 @@ def mk_feature_select_index(params, feature_groups, verbose):
 def fit_and_score(estimator, X, y, scoring, train_ind=None, test_ind=None, 
                   test_data=None, ret_estimator=False):
         """
+        Run fit and compute evaluation index.
+
+        # Arguments
         test_data: tuple(X, y)
-            when test_data is not None, ignore test_ind and use test_data in compute score_test.
+            When test_data is not None, ignore test_ind and use test_data in compute score_test.
         """
         if train_ind is None:
             train_ind = np.arange(len(X))

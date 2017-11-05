@@ -15,6 +15,20 @@ from .base import mk_dir
 from ..model_selection import base as msb
 
 class CVSummarizer:
+    """
+    Summarize cross validation results.
+
+    # Arguments
+    cvsize: int.
+        Number of folds.
+
+    valid: bool
+        Flag whether validation data is input  or not.
+
+    sign: 1 or -1.
+        Attribute of sklearn.metrics.make_scorer .
+        Flag whether greater than better or not.
+    """
     def __init__(self, paraname_list, cvsize, score_summarizer, score_summarizer_name, valid, 
                  sign, model_id, verbose, logdir=None):
         self.score_summarizer = score_summarizer
@@ -157,6 +171,9 @@ class CVSummarizer:
             
 
 class NoteBookVisualizer():
+    """
+    Visualize cross validation results.
+    """
     time_col = "end_time"
     score_cols = dict(train="mean_train_score", test="mean_test_score", valid="validation_score")
     score_std_cols = dict(train="std_train_score", test="std_test_score")

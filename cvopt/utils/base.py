@@ -4,6 +4,9 @@ from sklearn.base import clone
 
 
 def mk_dir(path, error=False):
+    """
+    Make directory.    
+    """
     if os.path.isdir(path):
         if error:
             raise Exception("this dir could not be made (already exist)")
@@ -14,7 +17,13 @@ def mk_dir(path, error=False):
 
 def to_nparray(Xy, ravel_1d):
     """
-    ravel_1d
+    Convert to np.array
+
+    # Arguments
+    Xy
+        X or y
+
+    ravel_1d: bool
         When True, Xy.shape=(n,1) -> Xy.shape=(n,)
     """
     if isinstance(Xy, (pd.core.frame.DataFrame, pd.core.frame.Series)):
@@ -27,6 +36,9 @@ def to_nparray(Xy, ravel_1d):
 
 
 def chk_Xy(Xy, none_error, ravel_1d, msg_sjt):
+    """
+    Check class of X or y.
+    """
     base_msg = " must be np.array or pd.DataFrame."
     if Xy is None:
         if none_error:
@@ -38,6 +50,9 @@ def chk_Xy(Xy, none_error, ravel_1d, msg_sjt):
 
 
 def clone_estimator(estimator, params):
+    """
+    Clone estimator and set params.
+    """
     try:
         estimator = clone(estimator).set_params(**params)
     except RuntimeError:
