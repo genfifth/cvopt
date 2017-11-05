@@ -17,4 +17,4 @@ requires:
 * bokeh
    
 # Usage
-Please see [example](https://github.com/gen00/cvopt/blob/master/example/example.ipynb)
+Please see [example](https://github.com/genfifth/cvopt/blob/master/example/example.ipynb)
