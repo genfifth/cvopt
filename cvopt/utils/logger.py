@@ -27,7 +27,7 @@ class CVSummarizer:
 
     sign: 1 or -1.
         Attribute of sklearn.metrics.make_scorer .
-        Flag whether greater than better or not.
+        Flag whether greater is better or not.
     """
     def __init__(self, paraname_list, cvsize, score_summarizer, score_summarizer_name, valid, 
                  sign, model_id, verbose, logdir=None):
@@ -328,7 +328,7 @@ class NoteBookVisualizer():
                 return
 
             # mk bokeh source
-            self.cv_src, cv_hover = self._mk_score_source(cv_results, xcol=NoteBookVisualizer.time_col, score_cols=list(NoteBookVisualizer.score_cols.values()), 
+            self.cv_src, cv_hover = self._mk_score_source(cv_results, xcol=NoteBookVisualizer.time_col, score_cols=[NoteBookVisualizer.score_cols[i] for i in self.data_types], 
                                                           hover_cols=self.all_param_cols)
             self.end_time_src = ColumnDataSource(data=dict(text=["This search end time(estimated): "+estimeted_end_time]))
             self.cv_score_std_src = ColumnDataSource(data=cv_score_std)

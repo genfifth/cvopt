@@ -27,7 +27,8 @@ class hyperoptCV(BaseSearcher):
 
         scoring: string or sklearn.metrics.make_scorer.
             Evaluation index of search.
-
+            When scoring is None, use stimator default scorer and this score greater is better.
+            
         cv: scikit-learn cross-validator or int(number of folds), default=5.
             Cross validation setting.
 
@@ -136,7 +137,7 @@ class hyperoptCV(BaseSearcher):
         self.trials = Trials()
         try :
             best_params = fmin(obj, param_distributions, algo=self.algo, max_evals=self.max_evals,
-                               random_state=self.random_state, trials=self.trials)
+                               rstate=self.random_state, trials=self.trials)
         except KeyboardInterrupt:
             best_params = self.trials.argmin
         finally:

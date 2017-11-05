@@ -11,7 +11,7 @@ This module has API like scikit-learn cross validation class and easy to use.
 
 # Installation   
 ```bash
-$ pip install git+https://github.com/gen00/cvopt
+$ pip install git+https://github.com/genfifth/cvopt
 ```
 requires:   
 * Python3
@@ -21,10 +21,13 @@ requires:
 * hyperopt
 * bokeh
    
-# Quick start -parameter search and feature select that can be written in 5 lines-
+# Quick start -Search can be written in 5 lines.-
 ```python
-
-
+from cvopt import hyperoptCV
+param_distributions = {"penalty": hp.choice("penalty", ["l1", "l2"]), "C": hp.choice("C", [1e-1, 1e-0, 1e1]),
+                       "class_weight" : hp.choice("class_weight", [None, "balanced"]),}
+hpcv = hyperoptCV(estimator=LogisticRegression(), param_distributions=param_distributions)
+hpcv.fit(Xtrain, ytrain)
 ```
    
 # Usage

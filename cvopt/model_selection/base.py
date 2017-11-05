@@ -6,6 +6,7 @@ from abc import ABCMeta, abstractmethod
 from sklearn.utils.metaestimators import if_delegate_has_method
 from sklearn.base import BaseEstimator, is_classifier
 from sklearn.metrics import SCORERS, make_scorer
+from sklearn.metrics.scorer import check_scoring
 from sklearn.model_selection import check_cv
 
 from ..utils.base import mk_dir, chk_Xy, clone_estimator
@@ -13,7 +14,7 @@ from ..utils.logger import CVSummarizer
 
 
 FEATURE_SELECT_PARAMNAME_PREFIX = "feature_group"
-ALWAYS_USED_FEATURE_GROUP_NAME = -100
+ALWAYS_USED_FEATURE_GROUP_ID = -100
 
 
 class BaseSearcher(BaseEstimator, metaclass=ABCMeta):
@@ -37,9 +38,6 @@ class BaseSearcher(BaseEstimator, metaclass=ABCMeta):
 
     @abstractmethod
     def _mk_feature_select_patam_distribution(self, key, distribution):
-        """
-        ************
-        """
         pass
 
     @abstractmethod
@@ -50,14 +48,15 @@ class BaseSearcher(BaseEstimator, metaclass=ABCMeta):
                  scoring, cv, n_jobs, pre_dispatch, 
                  verbose, logdir, save_estimator, model_id, refit):
         self.estimator = estimator
-
-        if scoring is None:
-            self.scoring = make_scorer(estimator.score, greater_is_better=True)
-        elif isinstance(scoring, str):
-            self.scoring = SCORERS[scoring]
+        self.scoring = check_scoring(estimator, scoring=scoring)
+        if hasattr(self.scoring, "_sign"):
+            self.sign = self.scoring._sign
         else:
-            self.scoring = scoring
-        
+            self.sign = 1
+            # In this case, scoring is None & use estimator default scorer.
+            # Because scikit-learn default scorer is r2_score or accuracy, score greater is better.
+            # So sign = 1.
+
         self.cv = cv
         self.param_distributions = copy.deepcopy(param_distributions)
         self.verbose = verbose
@@ -99,7 +98,7 @@ class BaseSearcher(BaseEstimator, metaclass=ABCMeta):
 
         self._cvs = CVSummarizer(paraname_list=param_distributions.keys(), cvsize=self.n_splits_, 
                                  score_summarizer=BaseSearcher.score_summarizer, score_summarizer_name=BaseSearcher.score_summarizer_name, 
-                                 valid=valid, sign=self.scoring._sign, model_id=self.model_id, verbose = self.verbose, logdir=self.logdir)
+                                 valid=valid, sign=self.sign, model_id=self.model_id, verbose = self.verbose, logdir=self.logdir)
         self.cv_results_ = self._cvs()
 
         return X, y, Xvalid, yvalid, cv, param_distributions
@@ -175,7 +174,7 @@ def mk_feature_select_params(feature_groups, n_samples, n_features):
     ret = {}
     for i in feature_group_names:
         tmp = FEATURE_SELECT_PARAMNAME_PREFIX + str(i)
-        if i == ALWAYS_USED_FEATURE_GROUP_NAME:
+        if i == ALWAYS_USED_FEATURE_GROUP_ID:
             ret[tmp] = [True]
         elif n_samples == 1:
             ret[tmp] = [True]
