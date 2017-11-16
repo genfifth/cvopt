@@ -21,14 +21,15 @@ requires:
 * hyperopt
 * bokeh
    
-# Quick start -Search can be written in 5 lines.-
+# Quick start -search can be written in 5 lines.-
 ```python
-from cvopt import hyperoptCV
-param_distributions = {"penalty": hp.choice("penalty", ["l1", "l2"]), "C": hp.choice("C", [1e-1, 1e-0, 1e1]),
-                       "class_weight" : hp.choice("class_weight", [None, "balanced"]),}
+param_distributions = {"penalty":hp.choice("penalty", ["l1", "l2"]), "tol":hp.loguniform("tol", -4, -2), 
+                       "C":hp.loguniform("C", -3, 3), "class_weight":hp.choice("class_weight", [None, "balanced"])}
+feature_groups = np.random.randint(0, 5, Xtrain.shape[1]) 
 hpcv = hyperoptCV(estimator=LogisticRegression(), param_distributions=param_distributions)
-hpcv.fit(Xtrain, ytrain)
+hpcv.fit(Xtrain, ytrain, feature_groups=feature_groups)
 ```
    
-# Usage
-Please see [example](https://github.com/genfifth/cvopt/blob/master/example/example.ipynb)
+# Document
+[Basic usage](https://github.com/genfifth/cvopt/blob/master/docs/basic_usage.ipynb)
+API reference

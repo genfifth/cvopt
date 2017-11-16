@@ -1,15 +1,17 @@
-import os, copy
+import os, copy, warnings
 import pandas as pd, numpy as np
 from sklearn.base import clone
 
 
-def mk_dir(path, error=False):
+def mk_dir(path, error_level=0, msg=""):
     """
     Make directory.    
     """
     if os.path.isdir(path):
-        if error:
-            raise Exception("this dir could not be made (already exist)")
+        if error_level==1:
+            warnings.warn("%s Could not be made (already exist) " %path+msg)
+        elif error_level==2:
+            raise Exception("%s Could not be made (already exist) " %path+msg)
     else:
         os.makedirs(path, mode=0o777)
         os.chmod(path, mode=0o777)

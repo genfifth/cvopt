@@ -9,12 +9,9 @@ from sklearn.metrics import SCORERS, make_scorer
 from sklearn.metrics.scorer import check_scoring
 from sklearn.model_selection import check_cv
 
-from ..utils.base import mk_dir, chk_Xy, clone_estimator
-from ..utils.logger import CVSummarizer
-
-
-FEATURE_SELECT_PARAMNAME_PREFIX = "feature_group"
-ALWAYS_USED_FEATURE_GROUP_ID = -100
+from ..model_selection import _setting as st
+from ..utils._base import chk_Xy, clone_estimator
+from ..utils._logger import CVSummarizer
 
 
 class BaseSearcher(BaseEstimator, metaclass=ABCMeta):
@@ -98,7 +95,8 @@ class BaseSearcher(BaseEstimator, metaclass=ABCMeta):
 
         self._cvs = CVSummarizer(paraname_list=param_distributions.keys(), cvsize=self.n_splits_, 
                                  score_summarizer=BaseSearcher.score_summarizer, score_summarizer_name=BaseSearcher.score_summarizer_name, 
-                                 valid=valid, sign=self.sign, model_id=self.model_id, verbose = self.verbose, logdir=self.logdir)
+                                 valid=valid, sign=self.sign, model_id=self.model_id, verbose=self.verbose, 
+                                 save_estimator=self.save_estimator, logdir=self.logdir)
         self.cv_results_ = self._cvs()
 
         return X, y, Xvalid, yvalid, cv, param_distributions
@@ -173,8 +171,8 @@ def mk_feature_select_params(feature_groups, n_samples, n_features):
     
     ret = {}
     for i in feature_group_names:
-        tmp = FEATURE_SELECT_PARAMNAME_PREFIX + str(i)
-        if i == ALWAYS_USED_FEATURE_GROUP_ID:
+        tmp = st.FEATURE_SELECT_PARAMNAME_PREFIX + str(i)
+        if i == st.ALWAYS_USED_FEATURE_GROUP_ID:
             ret[tmp] = [True]
         elif n_samples == 1:
             ret[tmp] = [True]
@@ -192,10 +190,10 @@ def mk_feature_select_index(params, feature_groups, verbose):
     other_params = copy.deepcopy(params)
     feature_params = {}
     for key in params.keys():
-        if FEATURE_SELECT_PARAMNAME_PREFIX in key:
+        if st.FEATURE_SELECT_PARAMNAME_PREFIX in key:
             feature_params[key] = other_params.pop(key)
             if params[key]:
-                true_group_names.append(int(key.split(FEATURE_SELECT_PARAMNAME_PREFIX)[-1]))
+                true_group_names.append(int(key.split(st.FEATURE_SELECT_PARAMNAME_PREFIX)[-1]))
 
     if verbose:
         return np.in1d(feature_groups, true_group_names), feature_params, other_params
@@ -204,8 +202,7 @@ def mk_feature_select_index(params, feature_groups, verbose):
 
 
 
-def fit_and_score(estimator, X, y, scoring, train_ind=None, test_ind=None, 
-                  test_data=None, ret_estimator=False):
+def fit_and_score(estimator, X, y, scoring, train_ind=None, test_ind=None, test_data=None):
         """
         Run fit and compute evaluation index.
 
@@ -229,9 +226,7 @@ def fit_and_score(estimator, X, y, scoring, train_ind=None, test_ind=None,
         else:
             score_test = scoring(estimator, *test_data)
 
-        if ret_estimator:
-            return score_train, score_test, fittime, scoretime, estimator
-        else:
-            return score_train, score_test, fittime, scoretime
+        return score_train, score_test, fittime, scoretime, estimator
+
             
 

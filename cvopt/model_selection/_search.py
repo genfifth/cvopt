@@ -5,16 +5,16 @@ from sklearn.externals.joblib import dump, Parallel, delayed
 
 from hyperopt import fmin, Trials, tpe, hp, space_eval, STATUS_OK, STATUS_FAIL
 
-from .base import BaseSearcher, fit_and_score, mk_feature_select_index
-from ..utils.base import mk_dir, clone_estimator
-from ..utils.logger import CVSummarizer, NoteBookVisualizer
+from ._base import BaseSearcher, fit_and_score, mk_feature_select_index
+from ..utils._base import clone_estimator
+from ..utils._logger import CVSummarizer, NoteBookVisualizer
 
 class hyperoptCV(BaseSearcher):
     def __init__(self, estimator, param_distributions, 
                  scoring=None, cv=5, 
                  algo=tpe.suggest, max_evals=10, random_state=None, 
                  n_jobs=1, pre_dispatch="2*n_jobs", 
-                 verbose=0, logdir=None, save_estimator=False, model_id=None, refit=True):
+                 verbose=0, logdir=None, save_estimator=0, model_id=None, refit=True):
         """
         Cross validation optimizer using hyperopt.
 
@@ -63,12 +63,15 @@ class hyperoptCV(BaseSearcher):
             | |-{model_id}.csv                                      : search log
             | ...
             |-estimators_{model_id}
-              |-{model_id}_index{search count}_split{fold count}.pkl: fitted estimator by train fold data of cross validation.
+              |-{model_id}_index{search count}_split{fold count}.pkl: an estimator which is fitted fold train data
               ...
-              |-{model_id}_index{search count}_test.pkl             : fitted estimator by all train data(=X).
-                                                                      (When validation_data is not None, this is fitted and saved.).
-        save_estimator: bool, default=False.
-            When save_estimator is True, fitted estimator is saved in logdir.
+              |-{model_id}_index{search count}_test.pkl             : an estimator which is fitted whole train data.
+
+        save_estimator: int, default=0.
+            estimator save setting.
+            0: An estimator is not saved.
+            1: An estimator which is fitted fold train data is saved per cv-fold.
+            2: In addition to 1, an estimator which is fitted whole train data is saved per cv.
 
         model_id: str or None, default=None.
             This is used to log filename.
@@ -153,7 +156,7 @@ def mk_objfunc(return_succeed, return_failed,
                X, y, groups, feature_groups, feature_axis, estimator, scoring, cv, 
                score_summarizer=np.mean, 
                Xvalid=None, yvalid=None, n_jobs=1, pre_dispatch="2*n_jobs", 
-               cvsummarizer=None, save_estimator=False, min_n_features=2):
+               cvsummarizer=None, save_estimator=0, min_n_features=2):
     """
     Function to make search objective function(input:params, output:evaluation index)
 
@@ -210,8 +213,7 @@ def mk_objfunc(return_succeed, return_failed,
                                  X=np.compress(feature_select_ind, X, axis=feature_axis),  
                                  y=y, 
                                  train_ind=train_ind, test_ind=test_ind, 
-                                 scoring=scoring, 
-                                 ret_estimator=save_estimator)
+                                 scoring=scoring)
         for train_ind, test_ind in cv.split(np.compress(feature_select_ind, X, axis=feature_axis), y, groups))
 
         # evaluate validation data
@@ -223,28 +225,28 @@ def mk_objfunc(return_succeed, return_failed,
                 X=np.compress(feature_select_ind, X, axis=feature_axis),  
                 y=y, 
                 test_data=(np.compress(feature_select_ind, Xvalid, axis=feature_axis), yvalid), 
-                scoring=scoring, 
-                ret_estimator=True)
+                scoring=scoring)
 
         # summarize
-        if save_estimator:
+        if (save_estimator > 0):
             estimators_cv = []
-            cnt = 0
-            path = os.path.join(cvs.logdir, "estimators"+"_"+cvs.model_id)
-            mk_dir(path, error=False)
+            path = os.path.join(cvs.logdir, "estimators", cvs.model_id)
             name_prefix = cvs.model_id + "_index" + "{0:05d}".format(len(cvs.cv_results_["params"]))
-            for i, j, k, l, m in ret_p:
+            for cnt, (i, j, k, l, m) in enumerate(ret_p):
                 cv_train_scores.append(i)
                 cv_test_scores.append(j)
                 fit_times.append(k)
                 score_times.append(l)
 
                 dump(m, os.path.join(path, name_prefix+"_split"+"{0:02d}".format(cnt)+".pkl"))
-                cnt+=1
-            if Xvalid is not None:
+
+            if (save_estimator > 1):
+                if Xvalid is None:
+                    estimator_test = clone_estimator(estimator, estimator_params)
+                    estimator_test.fit(np.compress(feature_select_ind, X, axis=feature_axis), y)
                 dump(estimator_test, os.path.join(path, name_prefix+"_test"+".pkl"))
         else:
-            for i, j, k, l in ret_p:
+            for i, j, k, l, m in ret_p:
                 cv_train_scores.append(i)
                 cv_test_scores.append(j)
                 fit_times.append(k)

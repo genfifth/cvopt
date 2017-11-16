@@ -1,2 +1,4 @@
 # coding: utf-8
-from .search import hyperoptCV
+from ._search import hyperoptCV
+
+__all__ = ("hyperoptCV")

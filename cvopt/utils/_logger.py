@@ -1,5 +1,6 @@
 import os, sys, warnings, time, copy
 import pandas as pd, numpy as np
+from collections import OrderedDict
 from datetime import datetime, timedelta
 from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestRegressor
@@ -11,8 +12,8 @@ from bokeh.models import HoverTool, SaveTool, WheelZoomTool, ResetTool, PanTool,
 from bokeh.models.ranges import DataRange1d, FactorRange
 from bokeh.models.widgets import Div
 
-from .base import mk_dir
-from ..model_selection import base as msb
+from ._base import mk_dir
+from ..model_selection import _setting as st
 
 class CVSummarizer:
     """
@@ -30,7 +31,7 @@ class CVSummarizer:
         Flag whether greater is better or not.
     """
     def __init__(self, paraname_list, cvsize, score_summarizer, score_summarizer_name, valid, 
-                 sign, model_id, verbose, logdir=None):
+                 sign, model_id, verbose, save_estimator, logdir=None):
         self.score_summarizer = score_summarizer
         self.score_summarizer_name = str(score_summarizer_name)
         self.valid = valid
@@ -38,16 +39,21 @@ class CVSummarizer:
         self.model_id = str(model_id)
 
         self.verbose = verbose
+        self.save_estimator = save_estimator
         self.logdir = logdir
         if self.logdir is not None:
             path = os.path.join(self.logdir, "cv_results")
-            mk_dir(path, error=False)
+            mk_dir(path, error_level=0)
             self.save_path = os.path.join(path, str(self.model_id))
+            
+        if (save_estimator > 0):
+            mk_dir(os.path.join(self.logdir, "estimators", self.model_id), 
+                   error_level=1, msg="save in this directory.")
 
         self.params_keys = ["param_" + str(i) for i in paraname_list]
         self.train_score_keys = ["split"+str(i)+"_train_score" for i in range(cvsize)]
         self.test_score_keys = ["split"+str(i)+"_test_score" for i in range(cvsize)]
-        self.cv_results_ = {"index":[], "params":[]}
+        self.cv_results_ = OrderedDict({"index":[], "params":[]})
         self.next_elapsed_time = np.nan
         self.nbv = None
 
@@ -61,13 +67,12 @@ class CVSummarizer:
             self.cv_results_[key] = [value]
 
     def _save(self):
-        if self.logdir is not None:
-            try:
-                pd.DataFrame(self.cv_results_).to_csv(self.save_path+".csv", index=False, encoding="cp932")
-                os.chmod(self.save_path+".csv", mode=0o777)
-            except OSError:
-                pass
-                #warnings.warn("logfile don't be written, in this trun")
+        if self.logdir is not None:    
+            if len(pd.DataFrame(self.cv_results_)) == 1:
+                if os.path.isfile(self.save_path+".csv"):
+                    warnings.warn("A log file(%s) is already exist. cv result is append to this file" %self.save_path+".csv")
+            pd.DataFrame(self.cv_results_).iloc[[-1]].to_csv(self.save_path+".csv", index=False, encoding="cp932", 
+                                                             mode="a", header=(len(pd.DataFrame(self.cv_results_))==1))
 
     def _init_score(self, cv_train_scores, cv_test_scores, train_score, validation_score):
         if self.sign == 1:
@@ -83,39 +88,44 @@ class CVSummarizer:
                         feature_select, X_shape, start_time,
                         end_time, train_score, validation_score):
         cv_train_scores, cv_test_scores, train_score, validation_score = self._init_score(cv_train_scores, cv_test_scores, train_score, validation_score)
-        self._store("index", len(self.cv_results_["index"]))
-        self._store("model_id", self.model_id)
-        self._store("elapsed_time_sec(estimated)", self.next_elapsed_time)
 
+        # Summary
+        self._store("index", len(self.cv_results_["index"]))
+        self._store("params", params)
+        self._store("start_time", start_time)
+        self._store("end_time", end_time)
+
+        self._store(self.score_summarizer_name+"_train_score", self.score_summarizer(cv_train_scores))
+        self._store("std_train_score", np.std(cv_train_scores))
+        self._store(self.score_summarizer_name+"_test_score", self.score_summarizer(cv_test_scores))
+        self._store("std_test_score", np.std(cv_test_scores))
+        self._store("train_score(whole)", train_score)
+        self._store("validation_score", validation_score)
+
+        # Score details
+        for i , key in enumerate(self.train_score_keys):
+            self._store(key, cv_train_scores[i])
+        for i , key in enumerate (self.test_score_keys):
+            self._store(key, cv_test_scores[i])
+
+        # Parameter details
+        self._store("X_shape", X_shape)
+        self._store("feature_select", feature_select)
+        for key in self.params_keys:
+            self._store(key, params[key.split("param_")[1]])
+
+        # Time details
+        self._store("mean_fit_time", np.mean(fit_times))
+        self._store("mean_score_time", np.mean(score_times))
+        self._store("std_fit_time", np.std(fit_times))
+        self._store("std_score_time", np.std(score_times))
+        self._store("elapsed_time_sec(estimated)", self.next_elapsed_time)
         if isinstance(start_time, datetime) & isinstance(end_time, datetime):
             self._store("elapsed_time_sec", (end_time-start_time).seconds)
         else:
             self._store("elapsed_time_sec", np.nan)
 
-        self._store("feature_select", feature_select)
-        self._store("X_shape", X_shape)
-        self._store("start_time", start_time)
-        self._store("end_time", end_time)
-        self._store("train_score", train_score)
-        self._store("validation_score", validation_score)
-        self._store("params", params)
-
-        self._store("mean_fit_time", np.mean(fit_times))
-        self._store("mean_score_time", np.mean(score_times))
-        self._store("std_fit_time", np.std(fit_times))
-        self._store("std_score_time", np.std(score_times))
-        self._store(self.score_summarizer_name+"_train_score", self.score_summarizer(cv_train_scores))
-        self._store(self.score_summarizer_name+"_test_score", self.score_summarizer(cv_test_scores))
-        self._store("std_train_score", np.std(cv_train_scores))
-        self._store("std_test_score", np.std(cv_test_scores))
-
-        for i , key in enumerate(self.train_score_keys):
-            self._store(key, cv_train_scores[i])
-        for i , key in enumerate (self.test_score_keys):
-            self._store(key, cv_test_scores[i])
-        for key in self.params_keys:
-            self._store(key, params[key.split("param_")[1]])
-
+        self._store("model_id", self.model_id)
         self._save()
 
     def _estimate_time_sec(self, params):
@@ -280,8 +290,8 @@ class NoteBookVisualizer():
 
         param_dists = dict()
         if len(self.param_feature_cols) > 1:
-            param_dists[msb.FEATURE_SELECT_PARAMNAME_PREFIX] = dict(label=[i.split(msb.FEATURE_SELECT_PARAMNAME_PREFIX)[-1] for i in self.param_feature_cols], 
-                                                                    x=[int(i.split(msb.FEATURE_SELECT_PARAMNAME_PREFIX)[-1])-1 for i in self.param_feature_cols], 
+            param_dists[st.FEATURE_SELECT_PARAMNAME_PREFIX] = dict(label=[i.split(st.FEATURE_SELECT_PARAMNAME_PREFIX)[-1] for i in self.param_feature_cols], 
+                                                                    x=[int(i.split(st.FEATURE_SELECT_PARAMNAME_PREFIX)[-1])-1 for i in self.param_feature_cols], 
                                                                     top=cv_results[self.param_feature_cols].sum(0).values.tolist())
         for param_col in self.param_cols:
             if cv_results[param_col].dtypes == "object":
@@ -313,8 +323,8 @@ class NoteBookVisualizer():
         else:
             self.data_types = ["train", "test"]
 
-        self.param_feature_cols = [i.split("param_")[-1] for i in cv_results_cols if("param_"+msb.FEATURE_SELECT_PARAMNAME_PREFIX in i)&(i!="param_"+msb.FEATURE_SELECT_PARAMNAME_PREFIX+str(msb.ALWAYS_USED_FEATURE_GROUP_ID))]
-        self.all_param_cols = [i.split("param_")[-1] for i in cv_results_cols if("param_" in i)&(i!="param_"+msb.FEATURE_SELECT_PARAMNAME_PREFIX+str(msb.ALWAYS_USED_FEATURE_GROUP_ID))]
+        self.param_feature_cols = [i.split("param_")[-1] for i in cv_results_cols if("param_"+st.FEATURE_SELECT_PARAMNAME_PREFIX in i)&(i!="param_"+st.FEATURE_SELECT_PARAMNAME_PREFIX+str(st.ALWAYS_USED_FEATURE_GROUP_ID))]
+        self.all_param_cols = [i.split("param_")[-1] for i in cv_results_cols if("param_" in i)&(i!="param_"+st.FEATURE_SELECT_PARAMNAME_PREFIX+str(st.ALWAYS_USED_FEATURE_GROUP_ID))]
         self.param_cols = list(set(self.all_param_cols)-set(self.param_feature_cols))
         self.param_cols.sort()
         
@@ -388,8 +398,8 @@ class NoteBookVisualizer():
             param_hist_ps = dict()
 
             tmp = list(self.param_cols)
-            if msb.FEATURE_SELECT_PARAMNAME_PREFIX in self.param_srcs.keys():
-                tmp = [msb.FEATURE_SELECT_PARAMNAME_PREFIX] + tmp
+            if st.FEATURE_SELECT_PARAMNAME_PREFIX in self.param_srcs.keys():
+                tmp = [st.FEATURE_SELECT_PARAMNAME_PREFIX] + tmp
             for param_col in tmp:
                 if "label" in list(param_dists[param_col].keys()):
                     # Bar graph
