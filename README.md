@@ -31,5 +31,5 @@ hpcv.fit(Xtrain, ytrain, feature_groups=feature_groups)
 ```
    
 # Document
-[Basic usage](https://github.com/genfifth/cvopt/blob/master/docs/basic_usage.ipynb)
+[Basic usage](https://github.com/genfifth/cvopt/blob/master/docs/basic_usage.ipynb)   
 API reference
