@@ -121,7 +121,7 @@ def mk_metafeature(X, y, logdir, model_id, target_index, cv,
     estdir = os.path.join(logdir, "estimators", model_id)
     name_prefix = model_id + "_index" + "{0:05d}".format(target_index)
     
-    estimator = joblib.load(os.path.join(estdir, name_prefix+"_split"+"{0:02d}".format(0)+".pkl"))
+    #estimator = joblib.load(os.path.join(estdir, name_prefix+"_split"+"{0:02d}".format(0)+".pkl"))
     #cv = check_cv(cv, y, classifier=is_classifier(estimator))
     
     for i, (_, test_index) in enumerate(cv.split(X, y)):
