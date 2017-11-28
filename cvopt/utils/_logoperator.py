@@ -58,7 +58,7 @@ def extract_params(logdir, model_id, target_index, feature_groups=None):
     
 
 def mk_metafeature(X, y, logdir, model_id, target_index, cv, 
-                   validation_data=None, feature_groups=None, estimator_method="predict"):
+                   validation_data=None, feature_groups=None, estimator_method="predict", merge=True):
     """
     Make meta feature for stacking(https://mlwave.com/kaggle-ensembling-guide/)
     
@@ -93,7 +93,10 @@ def mk_metafeature(X, y, logdir, model_id, target_index, cv,
         
     estimator_method: str, default="predict".
         Using estimator's method to make meta feature.
-        
+    
+    merge: bool, default=True.
+        if True, return matrix which result per cv is merged into.
+    
     # Return
     X_meta or (X_meta, X_meta_validation_data) :np.ndarray or tuple of np.ndarray.
         When validation_data is input, return tuple.
@@ -126,9 +129,10 @@ def mk_metafeature(X, y, logdir, model_id, target_index, cv,
         X_meta.append(getattr(estimator, estimator_method)(X[test_index]))
         X_ind.append(test_index)
     
-    X_meta = np.concatenate(X_meta, axis=0)
-    X_ind = np.concatenate(X_ind, axis=0)
-    X_meta = X_meta[np.argsort(X_ind)]
+    if merge:
+        X_meta = np.concatenate(X_meta, axis=0)
+        X_ind = np.concatenate(X_ind, axis=0)
+        X_meta = X_meta[np.argsort(X_ind)]
     
     if validation_data is None:
         return X_meta
