@@ -3,10 +3,13 @@ import pandas as pd, numpy as np
 from sklearn.base import clone
 
 
-def mk_dir(path, error_level=0, msg=""):
+def mk_dir(path, error_level=0, msg=None):
     """
     Make directory.    
     """
+    if msg is None:
+        msg = ""
+    
     if os.path.isdir(path):
         if error_level==1:
             warnings.warn("%s Could not be made (already exist) " %path+msg)
