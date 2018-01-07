@@ -8,7 +8,7 @@ setup(
         description      = "Parameter search and feature selection's class, Integrated visualization and archive log.",
         license          = "BSD-2-Clause",
         author           = "gen/5",
-        author_email     = "gen__@outlook.jp ",
+        author_email     = "gen_fifth@outlook.jp",
         url              = "https://github.com/genfifth/cvopt.git",
         packages         = find_packages(),
         install_requires = ["numpy>=1.13.3", 
