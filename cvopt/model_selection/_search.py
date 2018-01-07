@@ -39,7 +39,7 @@ class hyperoptCV(BaseSearcher):
             Number of search.
 
         random_state: int or None, default=None.
-            Search seed.
+            The seed used by the random number generator.
 
         n_jobs: int, default=1.
             Number of jobs to run in parallel.
