@@ -14,6 +14,7 @@ setup(
         install_requires = ["numpy>=1.13.3", 
                             "pandas>=0.20.3", 
                             "scikit-learn>=0.19.1", 
-                            "hyperopt>=0.1"
+                            "hyperopt>=0.1", 
+                            "networkx==1.11", # https://github.com/hyperopt/hyperopt/issues/325
                             "bokeh>=0.12.10"],
         )
