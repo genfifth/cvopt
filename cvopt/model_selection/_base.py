@@ -19,6 +19,7 @@ class BaseSearcher(BaseEstimator, metaclass=ABCMeta):
     Base class of cross validation optimizer.
 
     # Class variables
+    
     score_summarizer: function(scores per cv)
         Score summarize function.
 
@@ -207,6 +208,7 @@ def fit_and_score(estimator, X, y, scoring, train_ind=None, test_ind=None, test_
         Run fit and compute evaluation index.
 
         # Arguments
+        
         test_data: tuple(X, y)
             When test_data is not None, ignore test_ind and use test_data in compute score_test.
         """

@@ -20,6 +20,7 @@ class CVSummarizer:
     Summarize cross validation results.
 
     # Arguments
+    
     cvsize: int.
         Number of folds.
 

@@ -1,0 +1,329 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>cvopt.model_selection &mdash; cvopt  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="cvopt  documentation" href="../index.html"/>
+        <link rel="next" title="cvopt.utils" href="cvopt.utils.html"/>
+        <link rel="prev" title="cvopt API Reference" href="../index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> cvopt
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">cvopt.model_selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cvopt.utils.html">cvopt.utils</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">cvopt</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>cvopt.model_selection</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/modules/cvopt.model_selection.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-cvopt.model_selection">
+<span id="cvopt-model-selection"></span><h1>cvopt.model_selection<a class="headerlink" href="#module-cvopt.model_selection" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="cvopt.model_selection.hyperoptCV">
+<em class="property">class </em><code class="descname">hyperoptCV</code><span class="sig-paren">(</span><em>estimator</em>, <em>param_distributions</em>, <em>scoring=None</em>, <em>cv=5</em>, <em>algo=&lt;function suggest&gt;</em>, <em>max_evals=10</em>, <em>random_state=None</em>, <em>n_jobs=1</em>, <em>pre_dispatch='2*n_jobs'</em>, <em>verbose=0</em>, <em>logdir=None</em>, <em>save_estimator=0</em>, <em>model_id=None</em>, <em>refit=True</em><span class="sig-paren">)</span><a class="headerlink" href="#cvopt.model_selection.hyperoptCV" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">cvopt.model_selection._base.BaseSearcher</span></code></p>
+<dl class="method">
+<dt id="cvopt.model_selection.hyperoptCV.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>estimator</em>, <em>param_distributions</em>, <em>scoring=None</em>, <em>cv=5</em>, <em>algo=&lt;function suggest&gt;</em>, <em>max_evals=10</em>, <em>random_state=None</em>, <em>n_jobs=1</em>, <em>pre_dispatch='2*n_jobs'</em>, <em>verbose=0</em>, <em>logdir=None</em>, <em>save_estimator=0</em>, <em>model_id=None</em>, <em>refit=True</em><span class="sig-paren">)</span><a class="headerlink" href="#cvopt.model_selection.hyperoptCV.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cross validation optimizer using hyperopt.</p>
+<p># Arguments</p>
+<dl class="docutils">
+<dt>estimator</dt>
+<dd>scikit-learn estimator like.</dd>
+<dt>param_distributions: dict(hyperopt format)</dt>
+<dd>Search space.</dd>
+<dt>scoring: string or sklearn.metrics.make_scorer.</dt>
+<dd>Evaluation index of search.
+When scoring is None, use stimator default scorer and this score greater is better.</dd>
+<dt>cv: scikit-learn cross-validator or int(number of folds), default=5.</dt>
+<dd>Cross validation setting.</dd>
+<dt>algo: hyperopt search algorithm class, default=tpe.suggest.</dt>
+<dd>Search algorithm.</dd>
+<dt>max_evals: int, default=10.</dt>
+<dd>Number of search.</dd>
+<dt>random_state: int or None, default=None.</dt>
+<dd>The seed used by the random number generator.</dd>
+<dt>n_jobs: int, default=1.</dt>
+<dd>Number of jobs to run in parallel.</dd>
+<dt>pre_dispatch: int or string, default=”2*n_jobs”.</dt>
+<dd>Controls the number of jobs that get dispatched during parallel.</dd>
+<dt>verbose: int(0, 1 or 2), default=0.</dt>
+<dd><p class="first">Controls the verbosity</p>
+<p>0: don’t display status.</p>
+<p>1: display status by stdout.</p>
+<p class="last">2: display status by graph.</p>
+</dd>
+<dt>logdir: str or None, default=None.</dt>
+<dd><p class="first">Path of directory to save log file.
+When logdir is None,  log is not saved.</p>
+<p>[directory structure]</p>
+<blockquote class="last">
+<div><p>logdir</p>
+<p><a href="#id1"><span class="problematic" id="id2">|</span></a>-cv_results</p>
+<div class="line-block">
+<div class="line"><a href="#id3"><span class="problematic" id="id4">|</span></a>-{model_id}.csv                                      : search log</div>
+</div>
+<div class="line-block">
+<div class="line">…</div>
+</div>
+<p><a href="#id5"><span class="problematic" id="id6">|</span></a>-estimators_{model_id}</p>
+<blockquote>
+<div><p><a href="#id7"><span class="problematic" id="id8">|</span></a>-{model_id}_index{search count}_split{fold count}.pkl: an estimator which is fitted fold train data</p>
+<p>…</p>
+<p><a href="#id9"><span class="problematic" id="id10">|</span></a>-{model_id}_index{search count}_test.pkl             : an estimator which is fitted whole train data.</p>
+</div></blockquote>
+</div></blockquote>
+</dd>
+<dt>save_estimator: int, default=0.</dt>
+<dd><p class="first">estimator save setting.</p>
+<p>0: An estimator is not saved.</p>
+<p>1: An estimator which is fitted fold train data is saved per cv-fold.</p>
+<p class="last">2: In addition to 1, an estimator which is fitted whole train data is saved per cv.</p>
+</dd>
+<dt>model_id: str or None, default=None.</dt>
+<dd>This is used to log filename.
+When model_id is None, this is generated by date time.</dd>
+<dt>refit: bool, default=True.</dt>
+<dd>Refit an estimator using the best found parameters on all train data(=X).</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="cvopt.model_selection.hyperoptCV.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em>, <em>validation_data=None</em>, <em>groups=None</em>, <em>feature_groups=None</em>, <em>min_n_features=2</em><span class="sig-paren">)</span><a class="headerlink" href="#cvopt.model_selection.hyperoptCV.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run fit.</p>
+<p># Arguments</p>
+<dl class="docutils">
+<dt>X :np.ndarray or pd.core.frame.DataFrame, shape(axis=0) = (n_samples)</dt>
+<dd>Features. Detail depends on estimator.</dd>
+<dt>y: np.ndarray or pd.core.frame.DataFrame, shape(axis=0) = (n_samples) or None, default=None.</dt>
+<dd>Target variable. detail depends on estimator.</dd>
+<dt>validation_data: tuple(X, y) or None, default=None.</dt>
+<dd>Data to compute validation score. detail depends on estimator.
+When validation_data is None, computing validation score is not run.</dd>
+<dt>groups: array-like, shape = (n_samples,)  or None, default=None.</dt>
+<dd>Group labels for the samples used while splitting the dataset into train/test set.
+(input of scikit-learn cross-validator)</dd>
+<dt>feature_groups: array-like, shape = (n_samples,) or None, default=None.</dt>
+<dd>Group labels for the features used while fearture select.
+When feature_groups is None, fearture selection is not run.</dd>
+<dt>min_n_features: int, default=2.</dt>
+<dd><p class="first">When number of X’s feature cols is less than min_n_features, return search failure.</p>
+<p class="last">e.g. If estimator has columns sampling function, use this option to avoid X become too small and error.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="cvopt.utils.html" class="btn btn-neutral float-right" title="cvopt.utils" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../index.html" class="btn btn-neutral" title="cvopt API Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, gen/5.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

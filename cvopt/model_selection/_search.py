@@ -19,6 +19,7 @@ class hyperoptCV(BaseSearcher):
         Cross validation optimizer using hyperopt.
 
         # Arguments
+        
         estimator
             scikit-learn estimator like.
 
@@ -49,28 +50,42 @@ class hyperoptCV(BaseSearcher):
 
         verbose: int(0, 1 or 2), default=0.
             Controls the verbosity
+            
             0: don't display status.
+            
             1: display status by stdout.
+            
             2: display status by graph.
 
         logdir: str or None, default=None.
            Path of directory to save log file.
            When logdir is None,  log is not saved.
-
+           
            [directory structure]
+           
             logdir
+            
             |-cv_results
+            
             | |-{model_id}.csv                                      : search log
+            
             | ...
+            
             |-estimators_{model_id}
+            
               |-{model_id}_index{search count}_split{fold count}.pkl: an estimator which is fitted fold train data
+              
               ...
+              
               |-{model_id}_index{search count}_test.pkl             : an estimator which is fitted whole train data.
 
         save_estimator: int, default=0.
             estimator save setting.
+            
             0: An estimator is not saved.
+            
             1: An estimator which is fitted fold train data is saved per cv-fold.
+            
             2: In addition to 1, an estimator which is fitted whole train data is saved per cv.
 
         model_id: str or None, default=None.
@@ -104,6 +119,7 @@ class hyperoptCV(BaseSearcher):
         Run fit.
 
         # Arguments
+        
         X :np.ndarray or pd.core.frame.DataFrame, shape(axis=0) = (n_samples)
             Features. Detail depends on estimator.
 
@@ -124,6 +140,7 @@ class hyperoptCV(BaseSearcher):
 
         min_n_features: int, default=2.
             When number of X's feature cols is less than min_n_features, return search failure.
+            
             e.g. If estimator has columns sampling function, use this option to avoid X become too small and error.
         """
         X, y, Xvalid, yvalid, cv, param_distributions = self._preproc_fit(X=X, y=y, validation_data=validation_data, feature_groups=feature_groups)
@@ -161,6 +178,7 @@ def mk_objfunc(return_succeed, return_failed,
     Function to make search objective function(input:params, output:evaluation index)
 
     # Arguments
+    
     return_succeed: str, include "score"
         Return value When search suceed.
         (the actual return value: eval(return_succeed))

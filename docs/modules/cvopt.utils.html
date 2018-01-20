@@ -1,0 +1,297 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>cvopt.utils &mdash; cvopt  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="cvopt  documentation" href="../index.html"/>
+        <link rel="prev" title="cvopt.model_selection" href="cvopt.model_selection.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> cvopt
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="cvopt.model_selection.html">cvopt.model_selection</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">cvopt.utils</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">cvopt</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>cvopt.utils</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/modules/cvopt.utils.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-cvopt.utils">
+<span id="cvopt-utils"></span><h1>cvopt.utils<a class="headerlink" href="#module-cvopt.utils" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="cvopt.utils.extract_params">
+<code class="descname">extract_params</code><span class="sig-paren">(</span><em>logdir</em>, <em>model_id</em>, <em>target_index</em>, <em>feature_groups=None</em><span class="sig-paren">)</span><a class="headerlink" href="#cvopt.utils.extract_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract parameters from cvopt logfile.</p>
+<p># Arguments</p>
+<dl class="docutils">
+<dt>logdir: str.</dt>
+<dd>cvopt’s log directory path.</dd>
+<dt>model_id: str.</dt>
+<dd>cvopt’s model id.</dd>
+<dt>target_index: int.</dt>
+<dd>Logfile index(start:0). 
+Parameters correspond to index is extracted.</dd>
+<dt>feature_groups: array-like, shape = (n_samples,) or None, default=None.</dt>
+<dd><p class="first">cvopt feature_groups.
+When feature_groups is not None, add feature select flag to return value.</p>
+<p class="last">feature select flag is bool vector. 
+If this value is True, optimizer recommend using corresponding column.</p>
+</dd>
+</dl>
+<p># Return</p>
+<dl class="docutils">
+<dt>estimator_params: dict</dt>
+<dd>estimator parameters of the target model.</dd>
+<dt>feature_params: dict</dt>
+<dd>feature parameters of the target model.</dd>
+<dt>feature_select_flag: numpy array(optional)</dt>
+<dd>feature select flag of the target model.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="cvopt.utils.mk_metafeature">
+<code class="descname">mk_metafeature</code><span class="sig-paren">(</span><em>X</em>, <em>y</em>, <em>logdir</em>, <em>model_id</em>, <em>target_index</em>, <em>cv</em>, <em>validation_data=None</em>, <em>feature_groups=None</em>, <em>estimator_method='predict'</em>, <em>merge=True</em><span class="sig-paren">)</span><a class="headerlink" href="#cvopt.utils.mk_metafeature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make meta feature for stacking(<a class="reference external" href="https://mlwave.com/kaggle-ensembling-guide/">https://mlwave.com/kaggle-ensembling-guide/</a>)</p>
+<p># Arguments</p>
+<dl class="docutils">
+<dt>X :np.ndarray or pd.core.frame.DataFrame, shape(axis=0) = (n_samples)</dt>
+<dd>Features that was used in optimizer training. Detail depends on estimator.
+Meta feature correspond to X is made using cross validation’s estimator.</dd>
+<dt>y: np.ndarray or pd.core.frame.DataFrame, shape(axis=0) = (n_samples) or None, default=None.</dt>
+<dd>Target variable that was used in optimizer training. Detail depends on estimator.</dd>
+<dt>logdir: str.</dt>
+<dd>cvopt’s log directory path.</dd>
+<dt>model_id: str.</dt>
+<dd>cvopt’s model id.</dd>
+<dt>target_index: int.</dt>
+<dd>Logfile index(start:0). 
+The estimator correspond to index is used to make meta feature.</dd>
+<dt>cv: scikit-learn cross-validator</dt>
+<dd>Cross validation setting that was used in optimizer training.</dd>
+<dt>validation_data: tuple(X, y) or None, default=None.</dt>
+<dd>Detail depends on estimator.
+Meta feature correspond to validation_data is made using the estimator 
+which is fitted whole train data.</dd>
+<dt>feature_groups: array-like, shape = (n_samples,) or None, default=None.</dt>
+<dd>cvopt feature_groups that was used in optimizer training.</dd>
+<dt>estimator_method: str, default=”predict”.</dt>
+<dd>Using estimator’s method to make meta feature.</dd>
+<dt>merge: bool, default=True.</dt>
+<dd>if True, return matrix which result per cv is merged into.</dd>
+</dl>
+<p># Return</p>
+<dl class="docutils">
+<dt>X_meta or (X_meta, X_meta_validation_data) :np.ndarray or tuple of np.ndarray.</dt>
+<dd>When validation_data is input, return tuple.</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="cvopt.model_selection.html" class="btn btn-neutral" title="cvopt.model_selection" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, gen/5.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
