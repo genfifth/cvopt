@@ -30,7 +30,7 @@ hpcv = hyperoptCV(estimator=LogisticRegression(), param_distributions=param_dist
 hpcv.fit(Xtrain, ytrain, feature_groups=feature_groups)
 ```
    
-# Document
+# Documents
 [Basic usage](https://github.com/genfifth/cvopt/blob/master/notebooks/basic_usage.ipynb)   
 [API reference](https://genfifth.github.io/cvopt/)
 
