@@ -32,7 +32,7 @@ hpcv.fit(Xtrain, ytrain, feature_groups=feature_groups)
    
 # Document
 [Basic usage](https://github.com/genfifth/cvopt/blob/master/notebooks/basic_usage.ipynb)   
-API reference
+[API reference](https://genfifth.github.io/cvopt/)
 
 # Changelog
-[log](https://github.com/genfifth/cvopt/blob/master/Changelog.md)   
+[Log](https://github.com/genfifth/cvopt/blob/master/Changelog.md)   
