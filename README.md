@@ -2,8 +2,6 @@
 cvopt(cross validation optimizer) is python module for machine learning's parameter search and feature selection, integrated visualization and archive log.   
 This module has API like scikit-learn cross validation class and easy to use.
 
-![readme_00](https://github.com/genfifth/images/blob/master/cvopt/readme_00.PNG)
-
 # Features
 * Optimize parameters and feature selections.
 * Integrated visualization and archive log.
