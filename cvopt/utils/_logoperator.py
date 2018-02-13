@@ -1,4 +1,4 @@
-import os
+import os, warnings
 import pandas as pd, numpy as np
 from sklearn.externals import joblib
 
@@ -24,7 +24,7 @@ def extract_params(logdir, model_id, target_index, feature_groups=None):
         
     feature_groups: array-like, shape = (n_samples,) or None, default=None.
         cvopt feature_groups.
-        When feature_groups is not None, add feature select flag to return value.
+        When feature_groups is None,  feature_param and feature_select_flag in returns is None.
         
         feature select flag is bool vector. 
         If this value is True, optimizer recommend using corresponding column.
@@ -34,15 +34,13 @@ def extract_params(logdir, model_id, target_index, feature_groups=None):
     estimator_params: dict
         estimator parameters of the target model.
     
-    feature_params: dict
+    feature_params: dict or None
         feature parameters of the target model.
     
-    feature_select_flag: numpy array(optional)
+    feature_select_flag: numpy array or None
         feature select flag of the target model.
     
     """
-    if feature_groups is not None:
-        feature_select_flag = np.array(feature_groups).astype(str)
     logfile = pd.read_csv(os.path.join(logdir, "cv_results", model_id+".csv"))
     logfile.set_index("index", inplace=True)
     if not logfile.index.is_unique:
@@ -51,6 +49,7 @@ def extract_params(logdir, model_id, target_index, feature_groups=None):
     params = eval(logfile.loc[target_index, "params"])
     estimator_params = dict()
     feature_params = dict()
+    feature_select_flag = np.array(feature_groups).astype(str)
     for key in params.keys():
         if st.FEATURE_SELECT_PARAMNAME_PREFIX in key:
             feature_params[key] = params[key]
@@ -59,9 +58,14 @@ def extract_params(logdir, model_id, target_index, feature_groups=None):
         else:
             estimator_params[key] = params[key]
         
-    if feature_select_flag is None:
-        return estimator_params, feature_params
+    if feature_groups is None:
+        if len(feature_params) > 0:
+            warnings.warn("This log file include feature select setting. Please specify feature_groups if necessary.")
+        return estimator_params, None, None
     else:
+        if len(feature_params) == 0:
+            warnings.warn("This log file don't include feature select setting. So return is (estimator_params, None, None)")
+            return estimator_params, None, None
         feature_select_flag = np.where(feature_select_flag=="True", True, False) 
         return estimator_params, feature_params, feature_select_flag
     
