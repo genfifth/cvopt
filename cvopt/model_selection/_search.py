@@ -6,7 +6,7 @@ from sklearn.externals.joblib import dump, Parallel, delayed
 from hyperopt import fmin, Trials, tpe, hp, space_eval, STATUS_OK, STATUS_FAIL
 
 from ._base import BaseSearcher, fit_and_score, mk_feature_select_index
-from ..utils._base import clone_estimator
+from ..utils._base import clone_estimator, compress
 from ..utils._logger import CVSummarizer, NoteBookVisualizer
 
 class hyperoptCV(BaseSearcher):
@@ -120,7 +120,7 @@ class hyperoptCV(BaseSearcher):
 
         # Arguments
         
-        X :np.ndarray or pd.core.frame.DataFrame, shape(axis=0) = (n_samples)
+        X :numpy.array, pandas.DataFrame or scipy.sparse, shape(axis=0) = (n_samples)
             Features. Detail depends on estimator.
 
         y: np.ndarray or pd.core.frame.DataFrame, shape(axis=0) = (n_samples) or None, default=None.
@@ -214,7 +214,7 @@ def mk_objfunc(return_succeed, return_failed,
                     end_time = datetime.now()
                     cvs.store_cv_result(cv_train_scores=[np.nan]*n_splits_, cv_test_scores=[np.nan]*n_splits_, params=params, 
                                         fit_times=[np.nan]*n_splits_, score_times=[np.nan]*n_splits_, feature_select=feature_select,
-                                        X_shape=np.compress(feature_select_ind, X, axis=feature_axis).shape, 
+                                        X_shape=compress(feature_select_ind, X, axis=feature_axis).shape, 
                                         start_time=start_time, end_time=end_time, 
                                         train_score=np.nan, validation_score=np.nan)
                 return eval(return_failed)
@@ -228,11 +228,11 @@ def mk_objfunc(return_succeed, return_failed,
         ret_p = Parallel(
             n_jobs=n_jobs, pre_dispatch=pre_dispatch, 
         )(delayed(fit_and_score)(estimator=clone_estimator(estimator, estimator_params), 
-                                 X=np.compress(feature_select_ind, X, axis=feature_axis),  
+                                 X=compress(feature_select_ind, X, axis=feature_axis),  
                                  y=y, 
                                  train_ind=train_ind, test_ind=test_ind, 
                                  scoring=scoring)
-        for train_ind, test_ind in cv.split(np.compress(feature_select_ind, X, axis=feature_axis), y, groups))
+        for train_ind, test_ind in cv.split(compress(feature_select_ind, X, axis=feature_axis), y, groups))
 
         # evaluate validation data
         if Xvalid is None:
@@ -240,9 +240,9 @@ def mk_objfunc(return_succeed, return_failed,
         else:
             train_score, validation_score, _, _, estimator_test = fit_and_score(
                 estimator=clone_estimator(estimator, estimator_params), 
-                X=np.compress(feature_select_ind, X, axis=feature_axis),  
+                X=compress(feature_select_ind, X, axis=feature_axis),  
                 y=y, 
-                test_data=(np.compress(feature_select_ind, Xvalid, axis=feature_axis), yvalid), 
+                test_data=(compress(feature_select_ind, Xvalid, axis=feature_axis), yvalid), 
                 scoring=scoring)
 
         # summarize
@@ -261,7 +261,7 @@ def mk_objfunc(return_succeed, return_failed,
             if (save_estimator > 1):
                 if Xvalid is None:
                     estimator_test = clone_estimator(estimator, estimator_params)
-                    estimator_test.fit(np.compress(feature_select_ind, X, axis=feature_axis), y)
+                    estimator_test.fit(compress(feature_select_ind, X, axis=feature_axis), y)
                 dump(estimator_test, os.path.join(path, name_prefix+"_test"+".pkl"))
         else:
             for i, j, k, l, m in ret_p:
@@ -274,7 +274,7 @@ def mk_objfunc(return_succeed, return_failed,
             end_time = datetime.now()
             cvs.store_cv_result(cv_train_scores=cv_train_scores, cv_test_scores=cv_test_scores, params=params, 
                                 fit_times=fit_times, score_times=score_times, feature_select=feature_select,
-                                X_shape=np.compress(feature_select_ind, X, axis=feature_axis).shape,
+                                X_shape=compress(feature_select_ind, X, axis=feature_axis).shape,
                                 start_time=start_time, end_time=end_time, 
                                 train_score=train_score, validation_score=validation_score)
         score = score_summarizer(cv_test_scores)

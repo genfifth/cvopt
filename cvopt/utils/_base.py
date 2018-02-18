@@ -1,4 +1,4 @@
-import os, copy, warnings
+import os, copy, warnings, scipy
 import pandas as pd, numpy as np
 from sklearn.base import clone
 
@@ -45,14 +45,16 @@ def chk_Xy(Xy, none_error, ravel_1d, msg_sjt):
     """
     Check class of X or y.
     """
-    base_msg = " must be np.array or pd.DataFrame."
+    base_msg = " must be numpy.array, pandas.DataFrame or scipy.sparse."
     if Xy is None:
         if none_error:
             raise TypeError(msg_sjt+base_msg)
-    elif not isinstance(Xy, (np.ndarray, pd.core.frame.DataFrame)):
-        raise TypeError(msg_sjt+base_msg)
+    elif scipy.sparse.issparse(Xy):
+    	return Xy
+    elif isinstance(Xy, (np.ndarray, pd.core.frame.DataFrame)):
+    	return to_nparray(Xy, ravel_1d)
 
-    return to_nparray(Xy, ravel_1d)
+    raise TypeError(msg_sjt+base_msg)
 
 
 def clone_estimator(estimator, params):
@@ -64,3 +66,23 @@ def clone_estimator(estimator, params):
     except RuntimeError:
         estimator = copy.deepcopy(estimator).set_params(**params)
     return estimator
+
+
+def compress(condition, a, axis):
+    if isinstance(a, np.ndarray):
+        return np.compress(condition=condition, a=a, axis=axis)
+    elif scipy.sparse.issparse(a):
+        if axis == 0:
+            return a[condition]
+        elif axis == 1:
+            return a[:, condition]
+        elif axis == 2:
+            return a[:, :, condition]
+        elif axis == 3:
+            return a[:, :, :, condition]
+        elif axis == 4:
+            return a[:, :, :, :, condition]
+        else:
+            raise ValueError("axis must be 0-4")
+    else:
+        raise ValueError("input array must be numpy.array or scipy.sparse")

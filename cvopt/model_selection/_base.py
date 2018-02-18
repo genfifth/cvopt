@@ -10,7 +10,7 @@ from sklearn.metrics.scorer import check_scoring
 from sklearn.model_selection import check_cv
 
 from ..model_selection import _setting as st
-from ..utils._base import chk_Xy, clone_estimator
+from ..utils._base import chk_Xy, clone_estimator, compress
 from ..utils._logger import CVSummarizer
 
 
@@ -88,7 +88,7 @@ class BaseSearcher(BaseEstimator, metaclass=ABCMeta):
             self._feature_select = False
         else:
             self._feature_select = True
-            feature_select_param = mk_feature_select_params(feature_groups, n_samples=len(X), 
+            feature_select_param = mk_feature_select_params(feature_groups, n_samples=X.shape[0], 
                                                             n_features=X.shape[BaseSearcher.feature_axis])
             for key in feature_select_param.keys():
                 param_distributions[key] = self._mk_feature_select_patam_distribution(key, feature_select_param[key])
@@ -112,9 +112,9 @@ class BaseSearcher(BaseEstimator, metaclass=ABCMeta):
                 self.feature_select_ind = np.array([True]*X.shape[BaseSearcher.feature_axis])
                 self.best_estimator_ = clone_estimator(self.estimator, self.best_params_)
             if y is None:
-                self.best_estimator_.fit(np.compress(self.feature_select_ind, X, axis=BaseSearcher.feature_axis))
+                self.best_estimator_.fit(compress(self.feature_select_ind, X, axis=BaseSearcher.feature_axis))
             else:
-                self.best_estimator_.fit(np.compress(self.feature_select_ind, X, axis=BaseSearcher.feature_axis), y)
+                self.best_estimator_.fit(compress(self.feature_select_ind, X, axis=BaseSearcher.feature_axis), y)
         if self.verbose == 1:
             sys.stdout.write("\n\rBest_score(finished):%s" %np.round(self.best_score_, 2))
 
@@ -122,37 +122,37 @@ class BaseSearcher(BaseEstimator, metaclass=ABCMeta):
     @if_delegate_has_method(delegate=("best_estimator_", "estimator"))
     def predict(self, X):
         X = chk_Xy(X, none_error=True, ravel_1d=False, msg_sjt="X")
-        return self.best_estimator_.predict(np.compress(self.feature_select_ind, X, axis=BaseSearcher.feature_axis))
+        return self.best_estimator_.predict(compress(self.feature_select_ind, X, axis=BaseSearcher.feature_axis))
 
     @if_delegate_has_method(delegate=("best_estimator_", "estimator"))
     def predict_proba(self, X):
         X = chk_Xy(X, none_error=True, ravel_1d=False, msg_sjt="X")
-        return self.best_estimator_.predict_proba(np.compress(self.feature_select_ind, X, axis=BaseSearcher.feature_axis))
+        return self.best_estimator_.predict_proba(compress(self.feature_select_ind, X, axis=BaseSearcher.feature_axis))
 
     @if_delegate_has_method(delegate=("best_estimator_", "estimator"))
     def predict_log_proba(self, X):
         X = chk_Xy(X, none_error=True, ravel_1d=False, msg_sjt="X")
-        return self.best_estimator_.predict_log_proba(np.compress(self.feature_select_ind, X, axis=BaseSearcher.feature_axis))
+        return self.best_estimator_.predict_log_proba(compress(self.feature_select_ind, X, axis=BaseSearcher.feature_axis))
 
     @if_delegate_has_method(delegate=("best_estimator_", "estimator"))
     def decision_function(self, X):
         X = chk_Xy(X, none_error=True, ravel_1d=False, msg_sjt="X")
-        return self.best_estimator_.decision_function(np.compress(self.feature_select_ind, X, axis=BaseSearcher.feature_axis))
+        return self.best_estimator_.decision_function(compress(self.feature_select_ind, X, axis=BaseSearcher.feature_axis))
 
     @if_delegate_has_method(delegate=("best_estimator_", "estimator"))
     def transform(self, X):
         X = chk_Xy(X, none_error=True, ravel_1d=False, msg_sjt="X")
-        return self.best_estimator_.transform(np.compress(self.feature_select_ind, X, axis=BaseSearcher.feature_axis))
+        return self.best_estimator_.transform(compress(self.feature_select_ind, X, axis=BaseSearcher.feature_axis))
 
     @if_delegate_has_method(delegate=("best_estimator_", "estimator"))
     def inverse_transform(self, Xt):
         Xt = chk_Xy(Xt, none_error=True, ravel_1d=False, msg_sjt="X")
-        return self.best_estimator_.inverse_transform(np.compress(self.feature_select_ind, Xt, axis=BaseSearcher.feature_axis))
+        return self.best_estimator_.inverse_transform(compress(self.feature_select_ind, Xt, axis=BaseSearcher.feature_axis))
 
     @if_delegate_has_method(delegate=("best_estimator_", "estimator"))
     def apply(self, X):
         X = chk_Xy(X, none_error=True, ravel_1d=False, msg_sjt="X")
-        return self.best_estimator_.apply(np.compress(self.feature_select_ind, Xt, axis=BaseSearcher.feature_axis))
+        return self.best_estimator_.apply(compress(self.feature_select_ind, Xt, axis=BaseSearcher.feature_axis))
 
     @if_delegate_has_method(delegate=("best_estimator_", "estimator"))
     def classes_(self):
@@ -213,7 +213,7 @@ def fit_and_score(estimator, X, y, scoring, train_ind=None, test_ind=None, test_
             When test_data is not None, ignore test_ind and use test_data in compute score_test.
         """
         if train_ind is None:
-            train_ind = np.arange(len(X))
+            train_ind = np.arange(X.shape[0])
 
         start = time.time()
         estimator.fit(X[train_ind], y[train_ind])

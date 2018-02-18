@@ -168,7 +168,7 @@
 Parameters correspond to index is extracted.</dd>
 <dt>feature_groups: array-like, shape = (n_samples,) or None, default=None.</dt>
 <dd><p class="first">cvopt feature_groups.
-When feature_groups is not None, add feature select flag to return value.</p>
+When feature_groups is None,  feature_param and feature_select_flag in returns is None.</p>
 <p class="last">feature select flag is bool vector. 
 If this value is True, optimizer recommend using corresponding column.</p>
 </dd>
@@ -177,9 +177,9 @@ If this value is True, optimizer recommend using corresponding column.</p>
 <dl class="docutils">
 <dt>estimator_params: dict</dt>
 <dd>estimator parameters of the target model.</dd>
-<dt>feature_params: dict</dt>
+<dt>feature_params: dict or None</dt>
 <dd>feature parameters of the target model.</dd>
-<dt>feature_select_flag: numpy array(optional)</dt>
+<dt>feature_select_flag: numpy array or None</dt>
 <dd>feature select flag of the target model.</dd>
 </dl>
 </dd></dl>
