@@ -15,7 +15,7 @@ setup(
                             "pandas>=0.22.0", 
                             "scikit-learn>=0.19.1", 
                             "hyperopt>=0.1", 
-                            "networkx=1.11", 
+                            "networkx==1.11", 
                             "gpy>=1.9.2", 
                             "gpyopt>=1.2.1", 
                             "bokeh>=0.12.14"],
