@@ -1,0 +1,621 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>cvopt.model_selection._base &mdash; cvopt  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="cvopt  documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> cvopt
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/cvopt.model_selection.html">cvopt.model_selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/cvopt.search_setting.html">cvopt.search_setting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/cvopt.utils.html">cvopt.utils</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">cvopt</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>cvopt.model_selection._base</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for cvopt.model_selection._base</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">copy</span><span class="o">,</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span><span class="o">,</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
+
+<span class="kn">from</span> <span class="nn">sklearn.utils.metaestimators</span> <span class="k">import</span> <span class="n">if_delegate_has_method</span>
+<span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="k">import</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">is_classifier</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="k">import</span> <span class="n">SCORERS</span><span class="p">,</span> <span class="n">make_scorer</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics.scorer</span> <span class="k">import</span> <span class="n">check_scoring</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="k">import</span> <span class="n">check_cv</span>
+<span class="kn">from</span> <span class="nn">sklearn.externals.joblib</span> <span class="k">import</span> <span class="n">dump</span><span class="p">,</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
+<span class="kn">from</span> <span class="nn">hyperopt</span> <span class="k">import</span> <span class="n">STATUS_OK</span><span class="p">,</span> <span class="n">STATUS_FAIL</span>
+
+<span class="kn">from</span> <span class="nn">..model_selection</span> <span class="k">import</span> <span class="n">_setting</span> <span class="k">as</span> <span class="n">st</span>
+<span class="kn">from</span> <span class="nn">..search_setting._base</span> <span class="k">import</span> <span class="n">conv_param_distributions</span><span class="p">,</span> <span class="n">search_category</span><span class="p">,</span> <span class="n">decode_params</span>
+<span class="kn">from</span> <span class="nn">..utils._base</span> <span class="k">import</span> <span class="n">chk_Xy</span><span class="p">,</span> <span class="n">clone_estimator</span><span class="p">,</span> <span class="n">compress</span>
+<span class="kn">from</span> <span class="nn">..utils._logger</span> <span class="k">import</span> <span class="n">CVSummarizer</span>
+
+<span class="k">class</span> <span class="nc">BaseSearcher</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class of cross validation optimizer.</span>
+
+<span class="sd">    Class Variables</span>
+<span class="sd">    ---------------</span>
+<span class="sd">    score_summarizer: function(scores per cv)</span>
+<span class="sd">        Score summarize function.</span>
+<span class="sd">    score_summarizer_name: str</span>
+<span class="sd">        This is used in logfile.</span>
+<span class="sd">    feature_axis: int</span>
+<span class="sd">        feature_select target axis. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">score_summarizer</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span>
+    <span class="n">score_summarizer_name</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span>
+    <span class="n">feature_axis</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">estimator</span><span class="p">,</span> <span class="n">param_distributions</span><span class="p">,</span> 
+                 <span class="n">scoring</span><span class="p">,</span> <span class="n">cv</span><span class="p">,</span> <span class="n">n_jobs</span><span class="p">,</span> <span class="n">pre_dispatch</span><span class="p">,</span> 
+                 <span class="n">verbose</span><span class="p">,</span> <span class="n">logdir</span><span class="p">,</span> <span class="n">save_estimator</span><span class="p">,</span> <span class="n">model_id</span><span class="p">,</span> <span class="n">refit</span><span class="p">,</span> <span class="n">backend</span><span class="p">):</span>
+        <span class="c1"># BACKLOG: Implement iid option(sklearn GridSearchCV have this option).</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span> <span class="o">=</span> <span class="n">estimator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scoring</span> <span class="o">=</span> <span class="n">check_scoring</span><span class="p">(</span><span class="n">estimator</span><span class="p">,</span> <span class="n">scoring</span><span class="o">=</span><span class="n">scoring</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scoring</span><span class="p">,</span> <span class="s2">&quot;_sign&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sign</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scoring</span><span class="o">.</span><span class="n">_sign</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sign</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="c1"># In this case, scoring is None &amp; use estimator default scorer.</span>
+            <span class="c1"># Because scikit-learn default scorer is r2_score or accuracy, score greater is better.</span>
+            <span class="c1"># So sign = 1.</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cv</span> <span class="o">=</span> <span class="n">cv</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">param_distributions</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">param_distributions</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span> <span class="o">=</span> <span class="n">n_jobs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pre_dispatch</span> <span class="o">=</span> <span class="n">pre_dispatch</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logdir</span> <span class="o">=</span> <span class="n">logdir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_estimator</span> <span class="o">=</span> <span class="n">save_estimator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="o">=</span> <span class="n">backend</span>
+
+        <span class="k">if</span> <span class="n">model_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_id</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">_%H%M%S&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_id</span> <span class="o">=</span> <span class="n">model_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">refit</span> <span class="o">=</span> <span class="n">refit</span>
+
+
+    <span class="k">def</span> <span class="nf">_preproc_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">validation_data</span><span class="p">,</span> <span class="n">feature_groups</span><span class="p">):</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">chk_Xy</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">none_error</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ravel_1d</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">msg_sjt</span><span class="o">=</span><span class="s2">&quot;X&quot;</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">chk_Xy</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">none_error</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ravel_1d</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">msg_sjt</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">validation_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">Xvalid</span><span class="p">,</span> <span class="n">yvalid</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="n">valid</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Xvalid</span> <span class="o">=</span> <span class="n">chk_Xy</span><span class="p">(</span><span class="n">validation_data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">none_error</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ravel_1d</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">msg_sjt</span><span class="o">=</span><span class="s2">&quot;Xvalid&quot;</span><span class="p">)</span>
+            <span class="n">yvalid</span> <span class="o">=</span> <span class="n">chk_Xy</span><span class="p">(</span><span class="n">validation_data</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">none_error</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ravel_1d</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">msg_sjt</span><span class="o">=</span><span class="s2">&quot;yvalid&quot;</span><span class="p">)</span>
+            <span class="n">valid</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">cv</span> <span class="o">=</span> <span class="n">check_cv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cv</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">classifier</span><span class="o">=</span><span class="n">is_classifier</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_splits_</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">get_n_splits</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">feature_groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_feature_select</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">param_distributions</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_feature_select</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">param_distributions</span> <span class="o">=</span> <span class="n">mk_feature_select_params</span><span class="p">(</span><span class="n">feature_groups</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> 
+                                                           <span class="n">n_features</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">BaseSearcher</span><span class="o">.</span><span class="n">feature_axis</span><span class="p">])</span>
+        <span class="n">param_distributions</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param_distributions</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cvs</span> <span class="o">=</span> <span class="n">CVSummarizer</span><span class="p">(</span><span class="n">paraname_list</span><span class="o">=</span><span class="n">param_distributions</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">cvsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_splits_</span><span class="p">,</span> 
+                                 <span class="n">score_summarizer</span><span class="o">=</span><span class="n">BaseSearcher</span><span class="o">.</span><span class="n">score_summarizer</span><span class="p">,</span> <span class="n">score_summarizer_name</span><span class="o">=</span><span class="n">BaseSearcher</span><span class="o">.</span><span class="n">score_summarizer_name</span><span class="p">,</span> 
+                                 <span class="n">valid</span><span class="o">=</span><span class="n">valid</span><span class="p">,</span> <span class="n">sign</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sign</span><span class="p">,</span> <span class="n">model_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_id</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span> 
+                                 <span class="n">save_estimator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">save_estimator</span><span class="p">,</span> <span class="n">logdir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">logdir</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cv_results_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cvs</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">Xvalid</span><span class="p">,</span> <span class="n">yvalid</span><span class="p">,</span> <span class="n">cv</span><span class="p">,</span> <span class="n">conv_param_distributions</span><span class="p">(</span><span class="n">param_distributions</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">_postproc_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">feature_groups</span><span class="p">,</span> <span class="n">best_params</span><span class="p">,</span> <span class="n">best_score</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_params_</span> <span class="o">=</span> <span class="n">best_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_score_</span> <span class="o">=</span> <span class="n">best_score</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">refit</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_feature_select</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">feature_select_ind</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">estimator_params</span> <span class="o">=</span> <span class="n">mk_feature_select_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">best_params_</span><span class="p">,</span> <span class="n">feature_groups</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">best_estimator_</span> <span class="o">=</span> <span class="n">clone_estimator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">,</span> <span class="n">estimator_params</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">feature_select_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="kc">True</span><span class="p">]</span><span class="o">*</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">BaseSearcher</span><span class="o">.</span><span class="n">feature_axis</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">best_estimator_</span> <span class="o">=</span> <span class="n">clone_estimator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_params_</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">best_estimator_</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">compress</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_select_ind</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">BaseSearcher</span><span class="o">.</span><span class="n">feature_axis</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">best_estimator_</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">compress</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_select_ind</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">BaseSearcher</span><span class="o">.</span><span class="n">feature_axis</span><span class="p">),</span> <span class="n">y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\r</span><span class="s2">Best_score(finished):</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">best_score_</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_random_scoring</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="n">score</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+            <span class="n">score</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scoring</span><span class="o">.</span><span class="n">_sign</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">scoring</span><span class="o">.</span><span class="n">_score_func</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">y</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">score</span><span class="p">)</span>
+
+    <span class="nd">@if_delegate_has_method</span><span class="p">(</span><span class="n">delegate</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;best_estimator_&quot;</span><span class="p">,</span> <span class="s2">&quot;estimator&quot;</span><span class="p">))</span>
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Call predict on the estimator with the best found parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------       </span>
+<span class="sd">        X :numpy.array, pandas.DataFrame or scipy.sparse, shape(axis=0) = (n_samples)</span>
+<span class="sd">            Features. Detail depends on estimator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">chk_Xy</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">none_error</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ravel_1d</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">msg_sjt</span><span class="o">=</span><span class="s2">&quot;X&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_estimator_</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">compress</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_select_ind</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">BaseSearcher</span><span class="o">.</span><span class="n">feature_axis</span><span class="p">))</span>
+
+    <span class="nd">@if_delegate_has_method</span><span class="p">(</span><span class="n">delegate</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;best_estimator_&quot;</span><span class="p">,</span> <span class="s2">&quot;estimator&quot;</span><span class="p">))</span>
+    <span class="k">def</span> <span class="nf">predict_proba</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Call predict_proba on the estimator with the best found parameters.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------       </span>
+<span class="sd">        X :numpy.array, pandas.DataFrame or scipy.sparse, shape(axis=0) = (n_samples)</span>
+<span class="sd">            Features. Detail depends on estimator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">chk_Xy</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">none_error</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ravel_1d</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">msg_sjt</span><span class="o">=</span><span class="s2">&quot;X&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_estimator_</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">compress</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_select_ind</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">BaseSearcher</span><span class="o">.</span><span class="n">feature_axis</span><span class="p">))</span>
+
+    <span class="nd">@if_delegate_has_method</span><span class="p">(</span><span class="n">delegate</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;best_estimator_&quot;</span><span class="p">,</span> <span class="s2">&quot;estimator&quot;</span><span class="p">))</span>
+    <span class="k">def</span> <span class="nf">predict_log_proba</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Call predict_log_proba on the estimator with the best found parameters.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------       </span>
+<span class="sd">        X :numpy.array, pandas.DataFrame or scipy.sparse, shape(axis=0) = (n_samples)</span>
+<span class="sd">            Features. Detail depends on estimator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">chk_Xy</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">none_error</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ravel_1d</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">msg_sjt</span><span class="o">=</span><span class="s2">&quot;X&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_estimator_</span><span class="o">.</span><span class="n">predict_log_proba</span><span class="p">(</span><span class="n">compress</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_select_ind</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">BaseSearcher</span><span class="o">.</span><span class="n">feature_axis</span><span class="p">))</span>
+
+    <span class="nd">@if_delegate_has_method</span><span class="p">(</span><span class="n">delegate</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;best_estimator_&quot;</span><span class="p">,</span> <span class="s2">&quot;estimator&quot;</span><span class="p">))</span>
+    <span class="k">def</span> <span class="nf">decision_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Call decision_function on the estimator with the best found parameters.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------       </span>
+<span class="sd">        X :numpy.array, pandas.DataFrame or scipy.sparse, shape(axis=0) = (n_samples)</span>
+<span class="sd">            Features. Detail depends on estimator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">chk_Xy</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">none_error</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ravel_1d</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">msg_sjt</span><span class="o">=</span><span class="s2">&quot;X&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_estimator_</span><span class="o">.</span><span class="n">decision_function</span><span class="p">(</span><span class="n">compress</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_select_ind</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">BaseSearcher</span><span class="o">.</span><span class="n">feature_axis</span><span class="p">))</span>
+
+    <span class="nd">@if_delegate_has_method</span><span class="p">(</span><span class="n">delegate</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;best_estimator_&quot;</span><span class="p">,</span> <span class="s2">&quot;estimator&quot;</span><span class="p">))</span>
+    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Call transform on the estimator with the best found parameters.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------       </span>
+<span class="sd">        X :numpy.array, pandas.DataFrame or scipy.sparse, shape(axis=0) = (n_samples)</span>
+<span class="sd">            Features. Detail depends on estimator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">chk_Xy</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">none_error</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ravel_1d</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">msg_sjt</span><span class="o">=</span><span class="s2">&quot;X&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_estimator_</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">compress</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_select_ind</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">BaseSearcher</span><span class="o">.</span><span class="n">feature_axis</span><span class="p">))</span>
+
+    <span class="nd">@if_delegate_has_method</span><span class="p">(</span><span class="n">delegate</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;best_estimator_&quot;</span><span class="p">,</span> <span class="s2">&quot;estimator&quot;</span><span class="p">))</span>
+    <span class="k">def</span> <span class="nf">inverse_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Xt</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Call inverse_transform on the estimator with the best found parameters.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------       </span>
+<span class="sd">        Xt :numpy.array, pandas.DataFrame or scipy.sparse, shape(axis=0) = (n_samples)</span>
+<span class="sd">            Features. Detail depends on estimator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Xt</span> <span class="o">=</span> <span class="n">chk_Xy</span><span class="p">(</span><span class="n">Xt</span><span class="p">,</span> <span class="n">none_error</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ravel_1d</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">msg_sjt</span><span class="o">=</span><span class="s2">&quot;X&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_estimator_</span><span class="o">.</span><span class="n">inverse_transform</span><span class="p">(</span><span class="n">compress</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_select_ind</span><span class="p">,</span> <span class="n">Xt</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">BaseSearcher</span><span class="o">.</span><span class="n">feature_axis</span><span class="p">))</span>
+
+    <span class="nd">@if_delegate_has_method</span><span class="p">(</span><span class="n">delegate</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;best_estimator_&quot;</span><span class="p">,</span> <span class="s2">&quot;estimator&quot;</span><span class="p">))</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Call apply on the estimator with the best found parameters.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------       </span>
+<span class="sd">        X :numpy.array, pandas.DataFrame or scipy.sparse, shape(axis=0) = (n_samples)</span>
+<span class="sd">            Features. Detail depends on estimator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">chk_Xy</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">none_error</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ravel_1d</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">msg_sjt</span><span class="o">=</span><span class="s2">&quot;X&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_estimator_</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">compress</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_select_ind</span><span class="p">,</span> <span class="n">Xt</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">BaseSearcher</span><span class="o">.</span><span class="n">feature_axis</span><span class="p">))</span>
+
+    <span class="nd">@if_delegate_has_method</span><span class="p">(</span><span class="n">delegate</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;best_estimator_&quot;</span><span class="p">,</span> <span class="s2">&quot;estimator&quot;</span><span class="p">))</span>
+    <span class="k">def</span> <span class="nf">classes_</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retern list of target classes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_estimator_</span><span class="o">.</span><span class="n">classes_</span>
+
+
+
+<span class="k">def</span> <span class="nf">mk_feature_select_params</span><span class="p">(</span><span class="n">feature_groups</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">,</span> <span class="n">n_features</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Set param_distributions for feature_select.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">feature_groups</span><span class="p">)</span> <span class="o">!=</span> <span class="n">n_features</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;feature_groups length must be equal to X length(n_sample)&quot;</span><span class="p">)</span>
+    
+    <span class="n">feature_group_names</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">feature_groups</span><span class="p">)</span>
+    <span class="n">feature_group_names</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+    
+    <span class="n">ret</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">feature_group_names</span><span class="p">:</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">FEATURE_SELECT_PARAMNAME_PREFIX</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">st</span><span class="o">.</span><span class="n">ALWAYS_USED_FEATURE_GROUP_ID</span><span class="p">:</span>
+            <span class="n">ret</span><span class="p">[</span><span class="n">tmp</span><span class="p">]</span> <span class="o">=</span> <span class="n">search_category</span><span class="p">([</span><span class="kc">True</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">n_samples</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">ret</span><span class="p">[</span><span class="n">tmp</span><span class="p">]</span> <span class="o">=</span> <span class="n">search_category</span><span class="p">([</span><span class="kc">True</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ret</span><span class="p">[</span><span class="n">tmp</span><span class="p">]</span> <span class="o">=</span> <span class="n">search_category</span><span class="p">([</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">ret</span>
+
+
+
+<span class="k">def</span> <span class="nf">mk_feature_select_index</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">feature_groups</span><span class="p">,</span> <span class="n">verbose</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Make feature select index.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">true_group_names</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">other_params</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">feature_params</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">FEATURE_SELECT_PARAMNAME_PREFIX</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+            <span class="n">feature_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">other_params</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+                <span class="n">true_group_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">FEATURE_SELECT_PARAMNAME_PREFIX</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">in1d</span><span class="p">(</span><span class="n">feature_groups</span><span class="p">,</span> <span class="n">true_group_names</span><span class="p">),</span> <span class="n">feature_params</span><span class="p">,</span> <span class="n">other_params</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">in1d</span><span class="p">(</span><span class="n">feature_groups</span><span class="p">,</span> <span class="n">true_group_names</span><span class="p">)</span>
+
+
+
+<span class="k">def</span> <span class="nf">fit_and_score</span><span class="p">(</span><span class="n">estimator</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">scoring</span><span class="p">,</span> <span class="n">train_ind</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">test_ind</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">test_data</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run fit and compute evaluation index.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ---------- </span>
+<span class="sd">        test_data: tuple(X, y)</span>
+<span class="sd">            When test_data is not None, ignore test_ind and use test_data in compute score_test.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">train_ind</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">train_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">estimator</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">train_ind</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">train_ind</span><span class="p">])</span>
+        <span class="n">fittime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
+
+        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">score_train</span> <span class="o">=</span> <span class="n">scoring</span><span class="p">(</span><span class="n">estimator</span><span class="p">,</span> <span class="n">X</span><span class="p">[</span><span class="n">train_ind</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">train_ind</span><span class="p">])</span>
+        <span class="n">scoretime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
+        
+        <span class="k">if</span> <span class="n">test_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">score_test</span> <span class="o">=</span> <span class="n">scoring</span><span class="p">(</span><span class="n">estimator</span><span class="p">,</span> <span class="n">X</span><span class="p">[</span><span class="n">test_ind</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">test_ind</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">score_test</span> <span class="o">=</span> <span class="n">scoring</span><span class="p">(</span><span class="n">estimator</span><span class="p">,</span> <span class="o">*</span><span class="n">test_data</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">score_train</span><span class="p">,</span> <span class="n">score_test</span><span class="p">,</span> <span class="n">fittime</span><span class="p">,</span> <span class="n">scoretime</span><span class="p">,</span> <span class="n">estimator</span>
+
+
+
+<span class="k">def</span> <span class="nf">_obj_return</span><span class="p">(</span><span class="n">score</span><span class="p">,</span> <span class="n">succeed</span><span class="p">,</span> <span class="n">backend</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;hyperopt&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">succeed</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;loss&quot;</span><span class="p">:</span><span class="o">-</span><span class="mf">1.0</span><span class="o">*</span><span class="n">score</span><span class="p">,</span> <span class="s2">&quot;status&quot;</span><span class="p">:</span><span class="n">STATUS_OK</span><span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;loss&quot;</span><span class="p">:</span><span class="n">score</span><span class="p">,</span> <span class="s2">&quot;status&quot;</span><span class="p">:</span><span class="n">STATUS_FAIL</span><span class="p">}</span>
+    
+    <span class="k">elif</span> <span class="p">(</span><span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;bayesopt&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;gaopt&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mf">1.0</span><span class="o">*</span><span class="n">score</span>
+
+
+
+<span class="k">def</span> <span class="nf">mk_objfunc</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="n">feature_groups</span><span class="p">,</span> <span class="n">feature_axis</span><span class="p">,</span> <span class="n">estimator</span><span class="p">,</span> <span class="n">scoring</span><span class="p">,</span> <span class="n">cv</span><span class="p">,</span> 
+               <span class="n">param_distributions</span><span class="p">,</span> <span class="n">backend</span><span class="p">,</span> <span class="n">failedscore</span><span class="p">,</span> 
+               <span class="n">score_summarizer</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> 
+               <span class="n">Xvalid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yvalid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">pre_dispatch</span><span class="o">=</span><span class="s2">&quot;2*n_jobs&quot;</span><span class="p">,</span> 
+               <span class="n">cvsummarizer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">save_estimator</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">min_n_features</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to make search objective function(input:params, output:evaluation index)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n_splits_</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">get_n_splits</span><span class="p">()</span>
+    <span class="n">cvs</span> <span class="o">=</span> <span class="n">cvsummarizer</span>
+
+    <span class="k">def</span> <span class="nf">obj</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">decode_params</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="n">param_distributions</span><span class="o">=</span><span class="n">param_distributions</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">)</span>
+
+        <span class="n">cvs</span><span class="o">.</span><span class="n">display_status</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="n">start_time</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">feature_groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">feature_select</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">feature_select_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="kc">True</span><span class="p">]</span><span class="o">*</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">feature_axis</span><span class="p">])</span>
+            <span class="n">estimator_params</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">feature_select</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">feature_select_ind</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">estimator_params</span> <span class="o">=</span> <span class="n">mk_feature_select_index</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">feature_groups</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">feature_select_ind</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">min_n_features</span><span class="p">:</span>
+                <span class="n">score</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+                <span class="k">if</span> <span class="n">cvs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">end_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+                    <span class="n">cvs</span><span class="o">.</span><span class="n">store_cv_result</span><span class="p">(</span><span class="n">cv_train_scores</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">]</span><span class="o">*</span><span class="n">n_splits_</span><span class="p">,</span> <span class="n">cv_test_scores</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">]</span><span class="o">*</span><span class="n">n_splits_</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> 
+                                        <span class="n">fit_times</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">]</span><span class="o">*</span><span class="n">n_splits_</span><span class="p">,</span> <span class="n">score_times</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">]</span><span class="o">*</span><span class="n">n_splits_</span><span class="p">,</span> <span class="n">feature_select</span><span class="o">=</span><span class="n">feature_select</span><span class="p">,</span>
+                                        <span class="n">X_shape</span><span class="o">=</span><span class="n">compress</span><span class="p">(</span><span class="n">feature_select_ind</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">feature_axis</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> 
+                                        <span class="n">start_time</span><span class="o">=</span><span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span><span class="o">=</span><span class="n">end_time</span><span class="p">,</span> 
+                                        <span class="n">train_score</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">validation_score</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">_obj_return</span><span class="p">(</span><span class="n">score</span><span class="o">=</span><span class="n">failedscore</span><span class="p">,</span> <span class="n">succeed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">)</span>
+
+        <span class="c1"># cross validation</span>
+        <span class="n">cv_train_scores</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">cv_test_scores</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">fit_times</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">score_times</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">ret_p</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span>
+            <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">pre_dispatch</span><span class="o">=</span><span class="n">pre_dispatch</span><span class="p">,</span> 
+        <span class="p">)(</span><span class="n">delayed</span><span class="p">(</span><span class="n">fit_and_score</span><span class="p">)(</span><span class="n">estimator</span><span class="o">=</span><span class="n">clone_estimator</span><span class="p">(</span><span class="n">estimator</span><span class="p">,</span> <span class="n">estimator_params</span><span class="p">),</span> 
+                                 <span class="n">X</span><span class="o">=</span><span class="n">compress</span><span class="p">(</span><span class="n">feature_select_ind</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">feature_axis</span><span class="p">),</span>  
+                                 <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> 
+                                 <span class="n">train_ind</span><span class="o">=</span><span class="n">train_ind</span><span class="p">,</span> <span class="n">test_ind</span><span class="o">=</span><span class="n">test_ind</span><span class="p">,</span> 
+                                 <span class="n">scoring</span><span class="o">=</span><span class="n">scoring</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">train_ind</span><span class="p">,</span> <span class="n">test_ind</span> <span class="ow">in</span> <span class="n">cv</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">compress</span><span class="p">(</span><span class="n">feature_select_ind</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">feature_axis</span><span class="p">),</span> <span class="n">y</span><span class="p">,</span> <span class="n">groups</span><span class="p">))</span>
+
+        <span class="c1"># evaluate validation data</span>
+        <span class="k">if</span> <span class="n">Xvalid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">train_score</span><span class="p">,</span> <span class="n">validation_score</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">train_score</span><span class="p">,</span> <span class="n">validation_score</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">estimator_test</span> <span class="o">=</span> <span class="n">fit_and_score</span><span class="p">(</span>
+                <span class="n">estimator</span><span class="o">=</span><span class="n">clone_estimator</span><span class="p">(</span><span class="n">estimator</span><span class="p">,</span> <span class="n">estimator_params</span><span class="p">),</span> 
+                <span class="n">X</span><span class="o">=</span><span class="n">compress</span><span class="p">(</span><span class="n">feature_select_ind</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">feature_axis</span><span class="p">),</span>  
+                <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> 
+                <span class="n">test_data</span><span class="o">=</span><span class="p">(</span><span class="n">compress</span><span class="p">(</span><span class="n">feature_select_ind</span><span class="p">,</span> <span class="n">Xvalid</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">feature_axis</span><span class="p">),</span> <span class="n">yvalid</span><span class="p">),</span> 
+                <span class="n">scoring</span><span class="o">=</span><span class="n">scoring</span><span class="p">)</span>
+
+        <span class="c1"># summarize</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">cvs</span><span class="o">.</span><span class="n">logdir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">save_estimator</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="n">estimators_cv</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cvs</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span> <span class="s2">&quot;estimators&quot;</span><span class="p">,</span> <span class="n">cvs</span><span class="o">.</span><span class="n">model_id</span><span class="p">)</span>
+            <span class="n">name_prefix</span> <span class="o">=</span> <span class="n">cvs</span><span class="o">.</span><span class="n">model_id</span> <span class="o">+</span> <span class="s2">&quot;_index&quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">{0:05d}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cvs</span><span class="o">.</span><span class="n">cv_results_</span><span class="p">[</span><span class="s2">&quot;params&quot;</span><span class="p">]))</span>
+            <span class="k">for</span> <span class="n">cnt</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ret_p</span><span class="p">):</span>
+                <span class="n">cv_train_scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="n">cv_test_scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+                <span class="n">fit_times</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+                <span class="n">score_times</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+
+                <span class="n">dump</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">name_prefix</span><span class="o">+</span><span class="s2">&quot;_split&quot;</span><span class="o">+</span><span class="s2">&quot;</span><span class="si">{0:02d}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cnt</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;.pkl&quot;</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="n">save_estimator</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">Xvalid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">estimator_test</span> <span class="o">=</span> <span class="n">clone_estimator</span><span class="p">(</span><span class="n">estimator</span><span class="p">,</span> <span class="n">estimator_params</span><span class="p">)</span>
+                    <span class="n">estimator_test</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">compress</span><span class="p">(</span><span class="n">feature_select_ind</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">feature_axis</span><span class="p">),</span> <span class="n">y</span><span class="p">)</span>
+                <span class="n">dump</span><span class="p">(</span><span class="n">estimator_test</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">name_prefix</span><span class="o">+</span><span class="s2">&quot;_test&quot;</span><span class="o">+</span><span class="s2">&quot;.pkl&quot;</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">ret_p</span><span class="p">:</span>
+                <span class="n">cv_train_scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="n">cv_test_scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+                <span class="n">fit_times</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+                <span class="n">score_times</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cvs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">end_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+            <span class="n">cvs</span><span class="o">.</span><span class="n">store_cv_result</span><span class="p">(</span><span class="n">cv_train_scores</span><span class="o">=</span><span class="n">cv_train_scores</span><span class="p">,</span> <span class="n">cv_test_scores</span><span class="o">=</span><span class="n">cv_test_scores</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> 
+                                <span class="n">fit_times</span><span class="o">=</span><span class="n">fit_times</span><span class="p">,</span> <span class="n">score_times</span><span class="o">=</span><span class="n">score_times</span><span class="p">,</span> <span class="n">feature_select</span><span class="o">=</span><span class="n">feature_select</span><span class="p">,</span>
+                                <span class="n">X_shape</span><span class="o">=</span><span class="n">compress</span><span class="p">(</span><span class="n">feature_select_ind</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">feature_axis</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                                <span class="n">start_time</span><span class="o">=</span><span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span><span class="o">=</span><span class="n">end_time</span><span class="p">,</span> 
+                                <span class="n">train_score</span><span class="o">=</span><span class="n">train_score</span><span class="p">,</span> <span class="n">validation_score</span><span class="o">=</span><span class="n">validation_score</span><span class="p">)</span>
+        <span class="n">score</span> <span class="o">=</span> <span class="n">score_summarizer</span><span class="p">(</span><span class="n">cv_test_scores</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_obj_return</span><span class="p">(</span><span class="n">score</span><span class="o">=</span><span class="n">score</span><span class="p">,</span> <span class="n">succeed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">obj</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, gen/5.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

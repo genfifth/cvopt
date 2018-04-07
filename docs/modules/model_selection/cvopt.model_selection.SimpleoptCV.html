@@ -1,0 +1,336 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>cvopt.model_selection.SimpleoptCV &mdash; cvopt  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="cvopt  documentation" href="../../index.html"/>
+        <link rel="up" title="cvopt.model_selection" href="../cvopt.model_selection.html"/>
+        <link rel="next" title="cvopt.search_setting" href="../cvopt.search_setting.html"/>
+        <link rel="prev" title="cvopt.model_selection.HyperoptCV" href="cvopt.model_selection.HyperoptCV.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> cvopt
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../cvopt.model_selection.html">cvopt.model_selection</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cvopt.model_selection.BayesoptCV.html">cvopt.model_selection.BayesoptCV</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cvopt.model_selection.GAoptCV.html">cvopt.model_selection.GAoptCV</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cvopt.model_selection.HyperoptCV.html">cvopt.model_selection.HyperoptCV</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">cvopt.model_selection.SimpleoptCV</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cvopt.search_setting.html">cvopt.search_setting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cvopt.utils.html">cvopt.utils</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">cvopt</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../cvopt.model_selection.html">cvopt.model_selection</a> &raquo;</li>
+        
+      <li>cvopt.model_selection.SimpleoptCV</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/modules/model_selection/cvopt.model_selection.SimpleoptCV.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="cvopt-model-selection-simpleoptcv">
+<h1>cvopt.model_selection.SimpleoptCV<a class="headerlink" href="#cvopt-model-selection-simpleoptcv" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="cvopt.model_selection.SimpleoptCV">
+<em class="property">class </em><code class="descname">SimpleoptCV</code><span class="sig-paren">(</span><em>estimator</em>, <em>param_distributions</em>, <em>scoring=None</em>, <em>cv=5</em>, <em>max_iter=10</em>, <em>random_state=None</em>, <em>n_jobs=1</em>, <em>pre_dispatch='2*n_jobs'</em>, <em>verbose=0</em>, <em>logdir=None</em>, <em>save_estimator=0</em>, <em>model_id=None</em>, <em>refit=True</em>, <em>backend='hyperopt'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/cvopt/model_selection/_search.html#SimpleoptCV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cvopt.model_selection.SimpleoptCV" title="Permalink to this definition">¶</a></dt>
+<dd><p>Each cross validation optimizer class’s wrapper.</p>
+<p>This class allow unified handling in different type backend.</p>
+<p>For each backend optimizer class, refer to each class`s page.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>estimator</strong> – scikit-learn estimator like.</li>
+<li><strong>param_distributions</strong> (<em>dict.</em>) – Search space.</li>
+<li><strong>scoring</strong> (<em>string</em><em> or </em><em>sklearn.metrics.make_scorer.</em>) – Evaluation index of search.
+When scoring is None, use stimator default scorer and this score greater is better.</li>
+<li><strong>cv</strong> (<em>scikit-learn cross-validator</em><em> or </em><em>int</em><em>(</em><em>number of folds</em><em>)</em><em>, </em><em>default=5.</em>) – Cross validation setting.</li>
+<li><strong>max_iter</strong> (<em>int</em><em>, </em><em>default=10.</em>) – Number of search.</li>
+<li><strong>random_state</strong> (<em>int</em><em> or </em><em>None</em><em>, </em><em>default=None.</em>) – The seed used by the random number generator.</li>
+<li><strong>n_jobs</strong> (<em>int</em><em>, </em><em>default=1.</em>) – Number of jobs to run in parallel.</li>
+<li><strong>pre_dispatch</strong> (<em>int</em><em> or </em><em>string</em><em>, </em><em>default=&quot;2*n_jobs&quot;.</em>) – Controls the number of jobs that get dispatched during parallel.</li>
+<li><strong>verbose</strong> (<em>int</em><em>(</em><em>0</em><em>, </em><em>1</em><em> or </em><em>2</em><em>)</em><em>, </em><em>default=0.</em>) – <p>Controls the verbosity</p>
+<p>0: don’t display status.</p>
+<p>1: display status by stdout.</p>
+<p>2: display status by graph.</p>
+</li>
+<li><strong>logdir</strong> (<em>str</em><em> or </em><em>None</em><em>, </em><em>default=None.</em>) – <p>Path of directory to save log file.
+When logdir is None,  log is not saved.</p>
+<p>[directory structure]</p>
+<p>logdir</p>
+<p><a href="#id1"><span class="problematic" id="id2">|</span></a>-cv_results</p>
+<div class="line-block">
+<div class="line"><a href="#id3"><span class="problematic" id="id4">|</span></a>-{model_id}.csv                                      : search log</div>
+</div>
+<div class="line-block">
+<div class="line">…</div>
+</div>
+<p><a href="#id5"><span class="problematic" id="id6">|</span></a>-estimators_{model_id}</p>
+<blockquote>
+<div><a href="#id7"><span class="problematic" id="id8">|</span></a>-{model_id}_index{search count}_split{fold count}.pkl: an estimator which is fitted fold train data<p>…</p>
+<p><a href="#id9"><span class="problematic" id="id10">|</span></a>-{model_id}_index{search count}_test.pkl             : an estimator which is fitted whole train data.</p>
+</div></blockquote>
+</li>
+<li><strong>save_estimator</strong> (<em>int</em><em>, </em><em>default=0.</em>) – <p>estimator save setting.</p>
+<p>0: An estimator is not saved.</p>
+<p>1: An estimator which is fitted fold train data is saved per cv-fold.</p>
+<p>2: In addition to 1, an estimator which is fitted whole train data is saved per cv.</p>
+</li>
+<li><strong>model_id</strong> (<em>str</em><em> or </em><em>None</em><em>, </em><em>default=None.</em>) – This is used to log filename.
+When model_id is None, this is generated by date time.</li>
+<li><strong>refit</strong> (<em>bool</em><em>, </em><em>default=True.</em>) – Refit an estimator using the best found parameters on all train data(=X).</li>
+<li><strong>backend</strong> (<em>str</em><em>, </em><em>default=&quot;hyperopt&quot;.</em>) – backend optimeizer.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="cvopt.model_selection.SimpleoptCV.cv_results_">
+<code class="descname">cv_results_</code><a class="headerlink" href="#cvopt.model_selection.SimpleoptCV.cv_results_" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>dict of numpy (masked) ndarrays</em> – A dict with keys as column headers and values as columns, that can be
+imported into a pandas <code class="docutils literal"><span class="pre">DataFrame</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cvopt.model_selection.SimpleoptCV.best_estimator_">
+<code class="descname">best_estimator_</code><a class="headerlink" href="#cvopt.model_selection.SimpleoptCV.best_estimator_" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>estimator or dict</em> – Estimator that was chosen by the search.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cvopt.model_selection.SimpleoptCV.best_score_">
+<code class="descname">best_score_</code><a class="headerlink" href="#cvopt.model_selection.SimpleoptCV.best_score_" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – Cross-validated score of the best_estimator.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cvopt.model_selection.SimpleoptCV.best_params_">
+<code class="descname">best_params_</code><a class="headerlink" href="#cvopt.model_selection.SimpleoptCV.best_params_" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>dict</em> – Parameter setting that gave the best results on the hold out data.</p>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="../../cvopt.model_selection.html#cvopt.model_selection.SimpleoptCV.__init__" title="cvopt.model_selection.SimpleoptCV.__init__"><code class="xref py py-obj docutils literal"><span class="pre">__init__</span></code></a>(estimator,&nbsp;param_distributions[,&nbsp;…])</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../cvopt.search_setting.html" class="btn btn-neutral float-right" title="cvopt.search_setting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="cvopt.model_selection.HyperoptCV.html" class="btn btn-neutral" title="cvopt.model_selection.HyperoptCV" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, gen/5.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,987 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>cvopt.model_selection._search &mdash; cvopt  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="cvopt  documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> cvopt
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/cvopt.model_selection.html">cvopt.model_selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/cvopt.search_setting.html">cvopt.search_setting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/cvopt.utils.html">cvopt.utils</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">cvopt</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>cvopt.model_selection._search</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for cvopt.model_selection._search</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">hyperopt</span> <span class="k">import</span> <span class="n">fmin</span><span class="p">,</span> <span class="n">tpe</span><span class="p">,</span> <span class="n">hp</span>
+<span class="kn">from</span> <span class="nn">GPyOpt.methods</span> <span class="k">import</span> <span class="n">BayesianOptimization</span>
+
+<span class="kn">from</span> <span class="nn">._base</span> <span class="k">import</span> <span class="n">BaseSearcher</span><span class="p">,</span> <span class="n">fit_and_score</span><span class="p">,</span> <span class="n">mk_feature_select_index</span><span class="p">,</span> <span class="n">mk_objfunc</span>
+<span class="kn">from</span> <span class="nn">._ga</span> <span class="k">import</span> <span class="n">gamin</span>
+<span class="kn">from</span> <span class="nn">..utils._base</span> <span class="k">import</span> <span class="n">clone_estimator</span><span class="p">,</span> <span class="n">compress</span>
+<span class="kn">from</span> <span class="nn">..utils._logger</span> <span class="k">import</span> <span class="n">CVSummarizer</span><span class="p">,</span> <span class="n">NoteBookVisualizer</span>
+
+<div class="viewcode-block" id="SimpleoptCV"><a class="viewcode-back" href="../../../modules/model_selection/cvopt.model_selection.SimpleoptCV.html#cvopt.model_selection.SimpleoptCV">[docs]</a><span class="k">class</span> <span class="nc">SimpleoptCV</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Each cross validation optimizer class&#39;s wrapper.</span>
+
+<span class="sd">    This class allow unified handling in different type backend.</span>
+
+<span class="sd">    For each backend optimizer class, refer to each class`s page.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    estimator</span>
+<span class="sd">        scikit-learn estimator like.</span>
+
+<span class="sd">    param_distributions: dict.</span>
+<span class="sd">        Search space.</span>
+
+<span class="sd">    scoring: string or sklearn.metrics.make_scorer.</span>
+<span class="sd">        Evaluation index of search.</span>
+<span class="sd">        When scoring is None, use stimator default scorer and this score greater is better.</span>
+<span class="sd">        </span>
+<span class="sd">    cv: scikit-learn cross-validator or int(number of folds), default=5.</span>
+<span class="sd">        Cross validation setting.</span>
+
+<span class="sd">    max_iter: int, default=10.</span>
+<span class="sd">        Number of search.</span>
+
+<span class="sd">    random_state: int or None, default=None.</span>
+<span class="sd">        The seed used by the random number generator.</span>
+
+<span class="sd">    n_jobs: int, default=1.</span>
+<span class="sd">        Number of jobs to run in parallel.</span>
+
+<span class="sd">    pre_dispatch: int or string, default=&quot;2*n_jobs&quot;.</span>
+<span class="sd">        Controls the number of jobs that get dispatched during parallel.</span>
+
+<span class="sd">    verbose: int(0, 1 or 2), default=0.</span>
+<span class="sd">        Controls the verbosity</span>
+<span class="sd">        </span>
+<span class="sd">        0: don&#39;t display status.</span>
+
+<span class="sd">        1: display status by stdout.</span>
+<span class="sd">        </span>
+<span class="sd">        2: display status by graph.</span>
+
+<span class="sd">    logdir: str or None, default=None.</span>
+<span class="sd">        Path of directory to save log file.</span>
+<span class="sd">        When logdir is None,  log is not saved.</span>
+<span class="sd">        </span>
+<span class="sd">        [directory structure]</span>
+<span class="sd">        </span>
+<span class="sd">        logdir</span>
+<span class="sd">        </span>
+<span class="sd">        |-cv_results</span>
+<span class="sd">        </span>
+<span class="sd">        | |-{model_id}.csv                                      : search log</span>
+<span class="sd">        </span>
+<span class="sd">        | ...</span>
+<span class="sd">        </span>
+<span class="sd">        |-estimators_{model_id}</span>
+<span class="sd">        </span>
+<span class="sd">            |-{model_id}_index{search count}_split{fold count}.pkl: an estimator which is fitted fold train data</span>
+<span class="sd">            </span>
+<span class="sd">            ...</span>
+<span class="sd">            </span>
+<span class="sd">            |-{model_id}_index{search count}_test.pkl             : an estimator which is fitted whole train data.</span>
+
+<span class="sd">    save_estimator: int, default=0.</span>
+<span class="sd">        estimator save setting.</span>
+<span class="sd">        </span>
+<span class="sd">        0: An estimator is not saved.</span>
+<span class="sd">        </span>
+<span class="sd">        1: An estimator which is fitted fold train data is saved per cv-fold.</span>
+<span class="sd">        </span>
+<span class="sd">        2: In addition to 1, an estimator which is fitted whole train data is saved per cv.</span>
+
+<span class="sd">    model_id: str or None, default=None.</span>
+<span class="sd">        This is used to log filename.</span>
+<span class="sd">        When model_id is None, this is generated by date time.</span>
+
+<span class="sd">    refit: bool, default=True.</span>
+<span class="sd">        Refit an estimator using the best found parameters on all train data(=X).</span>
+
+<span class="sd">    backend: str, default=&quot;hyperopt&quot;.</span>
+<span class="sd">        backend optimeizer.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cv_results_ : dict of numpy (masked) ndarrays</span>
+<span class="sd">        A dict with keys as column headers and values as columns, that can be</span>
+<span class="sd">        imported into a pandas ``DataFrame``.</span>
+
+<span class="sd">    best_estimator_ : estimator or dict</span>
+<span class="sd">        Estimator that was chosen by the search.</span>
+
+<span class="sd">    best_score_ : float</span>
+<span class="sd">        Cross-validated score of the best_estimator.</span>
+
+<span class="sd">    best_params_ : dict</span>
+<span class="sd">        Parameter setting that gave the best results on the hold out data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>      
+<div class="viewcode-block" id="SimpleoptCV.__init__"><a class="viewcode-back" href="../../../cvopt.model_selection.html#cvopt.model_selection.SimpleoptCV.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">estimator</span><span class="p">,</span> <span class="n">param_distributions</span><span class="p">,</span> 
+                 <span class="n">scoring</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> 
+                 <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">pre_dispatch</span><span class="o">=</span><span class="s2">&quot;2*n_jobs&quot;</span><span class="p">,</span> 
+                 <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">logdir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">save_estimator</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">model_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">refit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+                 <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;hyperopt&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span> 
+        <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;hyperopt&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optcv</span> <span class="o">=</span> <span class="n">HyperoptCV</span><span class="p">(</span><span class="n">estimator</span><span class="p">,</span> <span class="n">param_distributions</span><span class="p">,</span> 
+                                    <span class="n">scoring</span><span class="o">=</span><span class="n">scoring</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">cv</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="n">max_iter</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span> 
+                                    <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">pre_dispatch</span><span class="o">=</span><span class="n">pre_dispatch</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">logdir</span><span class="o">=</span><span class="n">logdir</span><span class="p">,</span> 
+                                    <span class="n">save_estimator</span><span class="o">=</span><span class="n">save_estimator</span><span class="p">,</span> <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span> <span class="n">refit</span><span class="o">=</span><span class="n">refit</span><span class="p">,</span> 
+                                    <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;bayesopt&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optcv</span> <span class="o">=</span> <span class="n">BayesoptCV</span><span class="p">(</span><span class="n">estimator</span><span class="p">,</span> <span class="n">param_distributions</span><span class="p">,</span> 
+                                    <span class="n">scoring</span><span class="o">=</span><span class="n">scoring</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">cv</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="n">max_iter</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span> 
+                                    <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">pre_dispatch</span><span class="o">=</span><span class="n">pre_dispatch</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">logdir</span><span class="o">=</span><span class="n">logdir</span><span class="p">,</span> 
+                                    <span class="n">save_estimator</span><span class="o">=</span><span class="n">save_estimator</span><span class="p">,</span> <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span> <span class="n">refit</span><span class="o">=</span><span class="n">refit</span><span class="p">,</span> 
+                                    <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;gaopt&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optcv</span> <span class="o">=</span> <span class="n">GAoptCV</span><span class="p">(</span><span class="n">estimator</span><span class="p">,</span> <span class="n">param_distributions</span><span class="p">,</span> 
+                                 <span class="n">scoring</span><span class="o">=</span><span class="n">scoring</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">cv</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="n">max_iter</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span> 
+                                 <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">pre_dispatch</span><span class="o">=</span><span class="n">pre_dispatch</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">logdir</span><span class="o">=</span><span class="n">logdir</span><span class="p">,</span> 
+                                 <span class="n">save_estimator</span><span class="o">=</span><span class="n">save_estimator</span><span class="p">,</span> <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span> <span class="n">refit</span><span class="o">=</span><span class="n">refit</span><span class="p">,</span> 
+                                 <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;`backend` is must be `hyperopt` or `bayesopt`.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="o">=</span> <span class="n">backend</span></div>
+            
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optcv</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span></div>
+
+        
+
+<div class="viewcode-block" id="HyperoptCV"><a class="viewcode-back" href="../../../modules/model_selection/cvopt.model_selection.HyperoptCV.html#cvopt.model_selection.HyperoptCV">[docs]</a><span class="k">class</span> <span class="nc">HyperoptCV</span><span class="p">(</span><span class="n">BaseSearcher</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Cross validation optimize by Hyperopt(Sequential Model Based Global Optimization).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    estimator</span>
+<span class="sd">        scikit-learn estimator like.</span>
+
+<span class="sd">    param_distributions: dict.</span>
+<span class="sd">        Search space.</span>
+
+<span class="sd">    scoring: string or sklearn.metrics.make_scorer.</span>
+<span class="sd">        Evaluation index of search.</span>
+<span class="sd">        When scoring is None, use stimator default scorer and this score greater is better.</span>
+<span class="sd">        </span>
+<span class="sd">    cv: scikit-learn cross-validator or int(number of folds), default=5.</span>
+<span class="sd">        Cross validation setting.</span>
+
+<span class="sd">    max_iter: int, default=10.</span>
+<span class="sd">        Number of search.</span>
+
+<span class="sd">    random_state: int or None, default=None.</span>
+<span class="sd">        The seed used by the random number generator.</span>
+
+<span class="sd">    n_jobs: int, default=1.</span>
+<span class="sd">        Number of jobs to run in parallel.</span>
+
+<span class="sd">    pre_dispatch: int or string, default=&quot;2*n_jobs&quot;.</span>
+<span class="sd">        Controls the number of jobs that get dispatched during parallel.</span>
+
+<span class="sd">    verbose: int(0, 1 or 2), default=0.</span>
+<span class="sd">        Controls the verbosity</span>
+<span class="sd">        </span>
+<span class="sd">        0: don&#39;t display status.</span>
+
+<span class="sd">        1: display status by stdout.</span>
+<span class="sd">        </span>
+<span class="sd">        2: display status by graph.</span>
+
+<span class="sd">    logdir: str or None, default=None.</span>
+<span class="sd">        Path of directory to save log file.</span>
+<span class="sd">        When logdir is None,  log is not saved.</span>
+<span class="sd">        </span>
+<span class="sd">        [directory structure]</span>
+<span class="sd">        </span>
+<span class="sd">        logdir</span>
+<span class="sd">        </span>
+<span class="sd">        |-cv_results</span>
+<span class="sd">        </span>
+<span class="sd">        | |-{model_id}.csv                                      : search log</span>
+<span class="sd">        </span>
+<span class="sd">        | ...</span>
+<span class="sd">        </span>
+<span class="sd">        |-estimators_{model_id}</span>
+<span class="sd">        </span>
+<span class="sd">            |-{model_id}_index{search count}_split{fold count}.pkl: an estimator which is fitted fold train data</span>
+<span class="sd">            </span>
+<span class="sd">            ...</span>
+<span class="sd">            </span>
+<span class="sd">            |-{model_id}_index{search count}_test.pkl             : an estimator which is fitted whole train data.</span>
+
+<span class="sd">    save_estimator: int, default=0.</span>
+<span class="sd">        estimator save setting.</span>
+<span class="sd">        </span>
+<span class="sd">        0: An estimator is not saved.</span>
+<span class="sd">        </span>
+<span class="sd">        1: An estimator which is fitted fold train data is saved per cv-fold.</span>
+<span class="sd">        </span>
+<span class="sd">        2: In addition to 1, an estimator which is fitted whole train data is saved per cv.</span>
+
+<span class="sd">    model_id: str or None, default=None.</span>
+<span class="sd">        This is used to log filename.</span>
+<span class="sd">        When model_id is None, this is generated by date time.</span>
+
+<span class="sd">    refit: bool, default=True.</span>
+<span class="sd">        Refit an estimator using the best found parameters on all train data(=X).</span>
+
+<span class="sd">    algo: hyperopt search algorithm class, default=tpe.suggest.</span>
+<span class="sd">        Hyperopt&#39;s parameter. Search algorithm.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cv_results_ : dict of numpy (masked) ndarrays</span>
+<span class="sd">        A dict with keys as column headers and values as columns, that can be</span>
+<span class="sd">        imported into a pandas ``DataFrame``.</span>
+
+<span class="sd">    best_estimator_ : estimator or dict</span>
+<span class="sd">        Estimator that was chosen by the search.</span>
+
+<span class="sd">    best_score_ : float</span>
+<span class="sd">        Cross-validated score of the best_estimator.</span>
+
+<span class="sd">    best_params_ : dict</span>
+<span class="sd">        Parameter setting that gave the best results on the hold out data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="HyperoptCV.__init__"><a class="viewcode-back" href="../../../cvopt.model_selection.html#cvopt.model_selection.HyperoptCV.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">estimator</span><span class="p">,</span> <span class="n">param_distributions</span><span class="p">,</span> 
+                 <span class="n">scoring</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> 
+                 <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">pre_dispatch</span><span class="o">=</span><span class="s2">&quot;2*n_jobs&quot;</span><span class="p">,</span> 
+                 <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">logdir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">save_estimator</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">model_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">refit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+                 <span class="n">algo</span><span class="o">=</span><span class="n">tpe</span><span class="o">.</span><span class="n">suggest</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">estimator</span><span class="o">=</span><span class="n">estimator</span><span class="p">,</span> <span class="n">param_distributions</span><span class="o">=</span><span class="n">param_distributions</span><span class="p">,</span> 
+                         <span class="n">scoring</span><span class="o">=</span><span class="n">scoring</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">cv</span><span class="p">,</span>  <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">pre_dispatch</span><span class="o">=</span><span class="n">pre_dispatch</span><span class="p">,</span> 
+                         <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">logdir</span><span class="o">=</span><span class="n">logdir</span><span class="p">,</span> <span class="n">save_estimator</span><span class="o">=</span><span class="n">save_estimator</span><span class="p">,</span> 
+                         <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span> <span class="n">refit</span><span class="o">=</span><span class="n">refit</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;hyperopt&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span> <span class="o">=</span> <span class="n">max_iter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">algo</span> <span class="o">=</span> <span class="n">algo</span>
+        <span class="k">if</span> <span class="n">random_state</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">random_state</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="HyperoptCV.fit"><a class="viewcode-back" href="../../../modules/model_selection/cvopt.model_selection.HyperoptCV.html#cvopt.model_selection.HyperoptCV.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validation_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+            <span class="n">feature_groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_n_features</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run fit.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------       </span>
+<span class="sd">        X :numpy.array, pandas.DataFrame or scipy.sparse, shape(axis=0) = (n_samples)</span>
+<span class="sd">            Features. Detail depends on estimator.</span>
+
+<span class="sd">        y: np.ndarray or pd.core.frame.DataFrame, shape(axis=0) = (n_samples) or None, default=None.</span>
+<span class="sd">            Target variable. detail depends on estimator.</span>
+
+<span class="sd">        validation_data: tuple(X, y) or None, default=None.</span>
+<span class="sd">            Data to compute validation score. detail depends on estimator.</span>
+<span class="sd">            When validation_data is None, computing validation score is not run.</span>
+
+<span class="sd">        groups: array-like, shape = (n_samples,)  or None, default=None.</span>
+<span class="sd">            Group labels for the samples used while splitting the dataset into train/test set.</span>
+<span class="sd">            (input of scikit-learn cross-validator)</span>
+
+<span class="sd">        feature_groups: array-like, shape = (n_samples,) or None, default=None.</span>
+<span class="sd">            Group labels for the features used while fearture select.</span>
+<span class="sd">            When feature_groups is None, fearture selection is not run.</span>
+
+<span class="sd">        min_n_features: int, default=2.</span>
+<span class="sd">            When number of X&#39;s feature cols is less than min_n_features, return search failure.</span>
+<span class="sd">            </span>
+<span class="sd">            e.g. If estimator has columns sampling function, use this option to avoid X become too small and error.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">Xvalid</span><span class="p">,</span> <span class="n">yvalid</span><span class="p">,</span> <span class="n">cv</span><span class="p">,</span> <span class="n">param_distributions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preproc_fit</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">validation_data</span><span class="o">=</span><span class="n">validation_data</span><span class="p">,</span> <span class="n">feature_groups</span><span class="o">=</span><span class="n">feature_groups</span><span class="p">)</span>
+
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">mk_objfunc</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="n">groups</span><span class="p">,</span> <span class="n">feature_groups</span><span class="o">=</span><span class="n">feature_groups</span><span class="p">,</span> <span class="n">feature_axis</span><span class="o">=</span><span class="n">BaseSearcher</span><span class="o">.</span><span class="n">feature_axis</span><span class="p">,</span> 
+                         <span class="n">estimator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">,</span> <span class="n">scoring</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scoring</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">cv</span><span class="p">,</span> 
+                         <span class="n">param_distributions</span><span class="o">=</span><span class="n">param_distributions</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="p">,</span> <span class="n">failedscore</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> 
+                         <span class="n">score_summarizer</span><span class="o">=</span><span class="n">BaseSearcher</span><span class="o">.</span><span class="n">score_summarizer</span><span class="p">,</span> 
+                         <span class="n">Xvalid</span><span class="o">=</span><span class="n">Xvalid</span><span class="p">,</span> <span class="n">yvalid</span><span class="o">=</span><span class="n">yvalid</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">pre_dispatch</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pre_dispatch</span><span class="p">,</span> 
+                         <span class="n">cvsummarizer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cvs</span><span class="p">,</span> <span class="n">save_estimator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">save_estimator</span><span class="p">,</span> <span class="n">min_n_features</span><span class="o">=</span><span class="n">min_n_features</span><span class="p">)</span>
+
+        <span class="k">try</span> <span class="p">:</span>
+            <span class="n">fmin</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">param_distributions</span><span class="p">,</span> <span class="n">algo</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">algo</span><span class="p">,</span> <span class="n">max_evals</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span><span class="p">,</span> <span class="n">rstate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_postproc_fit</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">feature_groups</span><span class="o">=</span><span class="n">feature_groups</span><span class="p">,</span> 
+                           <span class="n">best_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cvs</span><span class="o">.</span><span class="n">best_params_</span><span class="p">,</span> <span class="n">best_score</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cvs</span><span class="o">.</span><span class="n">best_score_</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div></div>
+
+
+
+<div class="viewcode-block" id="BayesoptCV"><a class="viewcode-back" href="../../../modules/model_selection/cvopt.model_selection.BayesoptCV.html#cvopt.model_selection.BayesoptCV">[docs]</a><span class="k">class</span> <span class="nc">BayesoptCV</span><span class="p">(</span><span class="n">BaseSearcher</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Cross validation optimizer by Gpyopt.BayesianOptimization.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    estimator</span>
+<span class="sd">        scikit-learn estimator like.</span>
+
+<span class="sd">    param_distributions: dict.</span>
+<span class="sd">        Search space.</span>
+
+<span class="sd">    scoring: string or sklearn.metrics.make_scorer.</span>
+<span class="sd">        Evaluation index of search.</span>
+<span class="sd">        When scoring is None, use stimator default scorer and this score greater is better.</span>
+<span class="sd">        </span>
+<span class="sd">    cv: scikit-learn cross-validator or int(number of folds), default=5.</span>
+<span class="sd">        Cross validation setting.</span>
+
+<span class="sd">    max_iter: int, default=10.</span>
+<span class="sd">        Number of search.</span>
+
+<span class="sd">    random_state: int or None, default=None.</span>
+<span class="sd">        The seed used by the random number generator.</span>
+
+<span class="sd">    n_jobs: int, default=1.</span>
+<span class="sd">        Number of jobs to run in parallel.</span>
+
+<span class="sd">    pre_dispatch: int or string, default=&quot;2*n_jobs&quot;.</span>
+<span class="sd">        Controls the number of jobs that get dispatched during parallel.</span>
+
+<span class="sd">    verbose: int(0, 1 or 2), default=0.</span>
+<span class="sd">        Controls the verbosity</span>
+<span class="sd">        </span>
+<span class="sd">        0: don&#39;t display status.</span>
+
+<span class="sd">        1: display status by stdout.</span>
+<span class="sd">        </span>
+<span class="sd">        2: display status by graph.</span>
+
+<span class="sd">    logdir: str or None, default=None.</span>
+<span class="sd">        Path of directory to save log file.</span>
+<span class="sd">        When logdir is None,  log is not saved.</span>
+<span class="sd">        </span>
+<span class="sd">        [directory structure]</span>
+<span class="sd">        </span>
+<span class="sd">        logdir</span>
+<span class="sd">        </span>
+<span class="sd">        |-cv_results</span>
+<span class="sd">        </span>
+<span class="sd">        | |-{model_id}.csv                                      : search log</span>
+<span class="sd">        </span>
+<span class="sd">        | ...</span>
+<span class="sd">        </span>
+<span class="sd">        |-estimators_{model_id}</span>
+<span class="sd">        </span>
+<span class="sd">            |-{model_id}_index{search count}_split{fold count}.pkl: an estimator which is fitted fold train data</span>
+<span class="sd">            </span>
+<span class="sd">            ...</span>
+<span class="sd">            </span>
+<span class="sd">            |-{model_id}_index{search count}_test.pkl             : an estimator which is fitted whole train data.</span>
+
+<span class="sd">    save_estimator: int, default=0.</span>
+<span class="sd">        estimator save setting.</span>
+<span class="sd">        </span>
+<span class="sd">        0: An estimator is not saved.</span>
+<span class="sd">        </span>
+<span class="sd">        1: An estimator which is fitted fold train data is saved per cv-fold.</span>
+<span class="sd">        </span>
+<span class="sd">        2: In addition to 1, an estimator which is fitted whole train data is saved per cv.</span>
+
+<span class="sd">    model_id: str or None, default=None.</span>
+<span class="sd">        This is used to log filename.</span>
+<span class="sd">        When model_id is None, this is generated by date time.</span>
+
+<span class="sd">    refit: bool, default=True.</span>
+<span class="sd">        Refit an estimator using the best found parameters on all train data(=X).</span>
+
+<span class="sd">    max_time: float, default=numpy.inf.</span>
+<span class="sd">        GpyOpt`s parameter. Maximum exploration horizon in seconds.</span>
+
+<span class="sd">    model_type: str, default=&quot;GP&quot;.</span>
+<span class="sd">        GpyOpt`s parameter. Type of model to use as surrogate.</span>
+
+<span class="sd">        * &#39;GP&#39;, standard Gaussian process.</span>
+
+<span class="sd">        * &#39;GP_MCMC&#39;,  Gaussian process with prior in the hyper-parameters.</span>
+
+<span class="sd">        * &#39;sparseGP&#39;, sparse Gaussian process.</span>
+
+<span class="sd">        * &#39;warperdGP&#39;, warped Gaussian process.</span>
+
+<span class="sd">        * &#39;InputWarpedGP&#39;, input warped Gaussian process</span>
+
+<span class="sd">        * &#39;RF&#39;, random forest (scikit-learn).</span>
+
+<span class="sd">    initial_params: numpy.array or None, default=None.</span>
+<span class="sd">        GpyOpt`s parameter. Initial inputs of the Gpy model.</span>
+
+<span class="sd">    initial_score: numpy.array or None, default=None.</span>
+<span class="sd">        GpyOpt`s parameter. Initial outputs of the Gpy model.</span>
+
+<span class="sd">    initial_design_numdata: int, default=5.</span>
+<span class="sd">        GpyOpt`s parameter. Number of initial points that are collected jointly before start running the optimization.</span>
+
+<span class="sd">    initial_design_type: str, default=&quot;random&quot;.</span>
+<span class="sd">        GpyOpt`s parameter. Type of initial design.</span>
+
+<span class="sd">        * &#39;random&#39;, to collect points in random locations.</span>
+
+<span class="sd">        * &#39;latin&#39;, to collect points in a Latin hypercube (discrete variables are sampled randomly.)</span>
+
+<span class="sd">    acquisition_type: str, default=&quot;EI&quot;.</span>
+<span class="sd">        GpyOpt`s parameter. Type of acquisition function to use.</span>
+
+<span class="sd">        * &#39;EI&#39;, expected improvement.</span>
+
+<span class="sd">        * &#39;EI_MCMC&#39;, integrated expected improvement (requires GP_MCMC model).</span>
+
+<span class="sd">        * &#39;MPI&#39;, maximum probability of improvement.</span>
+
+<span class="sd">        * &#39;MPI_MCMC&#39;, maximum probability of improvement (requires GP_MCMC model).</span>
+
+<span class="sd">        * &#39;LCB&#39;, GP-Lower confidence bound.</span>
+
+<span class="sd">        * &#39;LCB_MCMC&#39;, integrated GP-Lower confidence bound (requires GP_MCMC model).</span>
+
+<span class="sd">    normalize_Y: bool, default=True.</span>
+<span class="sd">        GpyOpt`s parameter. Whether to normalize the outputs before performing any optimization.</span>
+
+<span class="sd">    exact_feval: bool, default=False.</span>
+<span class="sd">        GpyOpt`s parameter. Whether the outputs are exact.</span>
+
+<span class="sd">    acquisition_optimizer_type: str. default=&quot;lbfgs&quot;.</span>
+<span class="sd">        GpyOpt`s parameter. Type of acquisition function to use.</span>
+
+<span class="sd">        * &#39;lbfgs&#39;: L-BFGS.</span>
+
+<span class="sd">        * &#39;DIRECT&#39;: Dividing Rectangles.</span>
+
+<span class="sd">        * &#39;CMA&#39;: covariance matrix adaptation.</span>
+
+<span class="sd">    model_update_interval: int. default=1.</span>
+<span class="sd">        GpyOpt`s parameter. Interval of collected observations after which the model is updated.</span>
+
+<span class="sd">    evaluator_type: str, default=&quot;sequential&quot;.</span>
+<span class="sd">        GpyOpt`s parameter. Determines the way the objective is evaluated (all methods are equivalent if the batch size is one).</span>
+
+<span class="sd">        * &#39;sequential&#39;, sequential evaluations.</span>
+
+<span class="sd">        * &#39;random&#39;: synchronous batch that selects the first element as in a sequential policy and the rest randomly.</span>
+
+<span class="sd">        * &#39;local_penalization&#39;: batch method proposed in (Gonzalez et al. 2016).</span>
+
+<span class="sd">        * &#39;thompson_sampling&#39;: batch method using Thompson sampling.</span>
+
+<span class="sd">    batch_size: int, default=1. </span>
+<span class="sd">        GpyOpt`s parameter. Size of the batch in which the objective is evaluated.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cv_results_ : dict of numpy (masked) ndarrays</span>
+<span class="sd">        A dict with keys as column headers and values as columns, that can be</span>
+<span class="sd">        imported into a pandas ``DataFrame``.</span>
+
+<span class="sd">    best_estimator_ : estimator or dict</span>
+<span class="sd">        Estimator that was chosen by the search.</span>
+
+<span class="sd">    best_score_ : float</span>
+<span class="sd">        Cross-validated score of the best_estimator.</span>
+
+<span class="sd">    best_params_ : dict</span>
+<span class="sd">        Parameter setting that gave the best results on the hold out data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="BayesoptCV.__init__"><a class="viewcode-back" href="../../../cvopt.model_selection.html#cvopt.model_selection.BayesoptCV.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">estimator</span><span class="p">,</span> <span class="n">param_distributions</span><span class="p">,</span> 
+                 <span class="n">scoring</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> 
+                 <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">pre_dispatch</span><span class="o">=</span><span class="s2">&quot;2*n_jobs&quot;</span><span class="p">,</span> 
+                 <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">logdir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">save_estimator</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">model_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">refit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+                 <span class="n">max_time</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">model_type</span><span class="o">=</span><span class="s2">&quot;GP&quot;</span><span class="p">,</span> <span class="n">initial_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">initial_score</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">initial_design_numdata</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">initial_design_type</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">,</span> 
+                 <span class="n">acquisition_type</span><span class="o">=</span><span class="s2">&quot;EI&quot;</span><span class="p">,</span> <span class="n">normalize_Y</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exact_feval</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                 <span class="n">acquisition_optimizer_type</span><span class="o">=</span><span class="s2">&quot;lbfgs&quot;</span><span class="p">,</span> <span class="n">model_update_interval</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
+                 <span class="n">evaluator_type</span><span class="o">=</span><span class="s2">&quot;sequential&quot;</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">estimator</span><span class="o">=</span><span class="n">estimator</span><span class="p">,</span> <span class="n">param_distributions</span><span class="o">=</span><span class="n">param_distributions</span><span class="p">,</span> 
+                         <span class="n">scoring</span><span class="o">=</span><span class="n">scoring</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">cv</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">pre_dispatch</span><span class="o">=</span><span class="n">pre_dispatch</span><span class="p">,</span> 
+                         <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">logdir</span><span class="o">=</span><span class="n">logdir</span><span class="p">,</span> <span class="n">save_estimator</span><span class="o">=</span><span class="n">save_estimator</span><span class="p">,</span> 
+                         <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span> <span class="n">refit</span><span class="o">=</span><span class="n">refit</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;bayesopt&quot;</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span> <span class="o">=</span> <span class="n">max_iter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_time</span> <span class="o">=</span> <span class="n">max_time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="n">model_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initial_params</span> <span class="o">=</span> <span class="n">initial_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initial_score</span> <span class="o">=</span> <span class="n">initial_score</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initial_design_numdata</span> <span class="o">=</span> <span class="n">initial_design_numdata</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initial_design_type</span> <span class="o">=</span> <span class="n">initial_design_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">acquisition_type</span> <span class="o">=</span> <span class="n">acquisition_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">normalize_Y</span> <span class="o">=</span> <span class="n">normalize_Y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exact_feval</span> <span class="o">=</span> <span class="n">exact_feval</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">acquisition_optimizer_type</span> <span class="o">=</span> <span class="n">acquisition_optimizer_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_update_interval</span> <span class="o">=</span> <span class="n">model_update_interval</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evaluator_type</span> <span class="o">=</span> <span class="n">evaluator_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">batch_size</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">failedscore</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="BayesoptCV.fit"><a class="viewcode-back" href="../../../modules/model_selection/cvopt.model_selection.BayesoptCV.html#cvopt.model_selection.BayesoptCV.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validation_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+            <span class="n">feature_groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_n_features</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run fit.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------       </span>
+<span class="sd">        X :numpy.array, pandas.DataFrame or scipy.sparse, shape(axis=0) = (n_samples)</span>
+<span class="sd">            Features. Detail depends on estimator.</span>
+
+<span class="sd">        y: np.ndarray or pd.core.frame.DataFrame, shape(axis=0) = (n_samples) or None, default=None.</span>
+<span class="sd">            Target variable. detail depends on estimator.</span>
+
+<span class="sd">        validation_data: tuple(X, y) or None, default=None.</span>
+<span class="sd">            Data to compute validation score. detail depends on estimator.</span>
+<span class="sd">            When validation_data is None, computing validation score is not run.</span>
+
+<span class="sd">        groups: array-like, shape = (n_samples,)  or None, default=None.</span>
+<span class="sd">            Group labels for the samples used while splitting the dataset into train/test set.</span>
+<span class="sd">            (input of scikit-learn cross-validator)</span>
+
+<span class="sd">        feature_groups: array-like, shape = (n_samples,) or None, default=None.</span>
+<span class="sd">            Group labels for the features used while fearture select.</span>
+<span class="sd">            When feature_groups is None, fearture selection is not run.</span>
+
+<span class="sd">        min_n_features: int, default=2.</span>
+<span class="sd">            When number of X&#39;s feature cols is less than min_n_features, return search failure.</span>
+<span class="sd">            </span>
+<span class="sd">            e.g. If estimator has columns sampling function, use this option to avoid X become too small and error.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">Xvalid</span><span class="p">,</span> <span class="n">yvalid</span><span class="p">,</span> <span class="n">cv</span><span class="p">,</span> <span class="n">param_distributions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preproc_fit</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">validation_data</span><span class="o">=</span><span class="n">validation_data</span><span class="p">,</span> <span class="n">feature_groups</span><span class="o">=</span><span class="n">feature_groups</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">failedscore</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># If search is failed, Return random score.</span>
+            <span class="c1"># random score is fixed at first fit.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">failedscore</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_random_scoring</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">mk_objfunc</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="n">groups</span><span class="p">,</span> <span class="n">feature_groups</span><span class="o">=</span><span class="n">feature_groups</span><span class="p">,</span> <span class="n">feature_axis</span><span class="o">=</span><span class="n">BaseSearcher</span><span class="o">.</span><span class="n">feature_axis</span><span class="p">,</span> 
+                         <span class="n">estimator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">,</span> <span class="n">scoring</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scoring</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">cv</span><span class="p">,</span> 
+                         <span class="n">param_distributions</span><span class="o">=</span><span class="n">param_distributions</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="p">,</span> <span class="n">failedscore</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">failedscore</span><span class="p">,</span> 
+                         <span class="n">score_summarizer</span><span class="o">=</span><span class="n">BaseSearcher</span><span class="o">.</span><span class="n">score_summarizer</span><span class="p">,</span> 
+                         <span class="n">Xvalid</span><span class="o">=</span><span class="n">Xvalid</span><span class="p">,</span> <span class="n">yvalid</span><span class="o">=</span><span class="n">yvalid</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">pre_dispatch</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pre_dispatch</span><span class="p">,</span> 
+                         <span class="n">cvsummarizer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cvs</span><span class="p">,</span> <span class="n">save_estimator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">save_estimator</span><span class="p">,</span> <span class="n">min_n_features</span><span class="o">=</span><span class="n">min_n_features</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">opt</span> <span class="o">=</span> <span class="n">BayesianOptimization</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="n">param_distributions</span><span class="p">,</span> <span class="n">constraints</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cost_withGradients</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                                        <span class="n">model_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_type</span><span class="p">,</span> <span class="n">X</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_params</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_score</span><span class="p">,</span>
+                                        <span class="n">initial_design_numdata</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_design_numdata</span><span class="p">,</span> 
+                                        <span class="n">initial_design_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_design_type</span><span class="p">,</span> 
+                                        <span class="n">acquisition_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">acquisition_type</span><span class="p">,</span> <span class="n">normalize_Y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">normalize_Y</span><span class="p">,</span>
+                                        <span class="n">exact_feval</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">exact_feval</span><span class="p">,</span> <span class="n">acquisition_optimizer_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">acquisition_optimizer_type</span><span class="p">,</span> 
+                                        <span class="n">model_update_interval</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_update_interval</span><span class="p">,</span> <span class="n">evaluator_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">evaluator_type</span><span class="p">,</span> 
+                                        <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">num_cores</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbosity_model</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                                        <span class="n">maximize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">de_duplication</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>   
+
+        <span class="k">try</span> <span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">opt</span><span class="o">.</span><span class="n">run_optimization</span><span class="p">(</span><span class="n">max_iter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span><span class="p">,</span> <span class="n">max_time</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_time</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+            <span class="k">pass</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_postproc_fit</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">feature_groups</span><span class="o">=</span><span class="n">feature_groups</span><span class="p">,</span> 
+                           <span class="n">best_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cvs</span><span class="o">.</span><span class="n">best_params_</span><span class="p">,</span> <span class="n">best_score</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cvs</span><span class="o">.</span><span class="n">best_score_</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div></div>
+
+
+<div class="viewcode-block" id="GAoptCV"><a class="viewcode-back" href="../../../modules/model_selection/cvopt.model_selection.GAoptCV.html#cvopt.model_selection.GAoptCV">[docs]</a><span class="k">class</span> <span class="nc">GAoptCV</span><span class="p">(</span><span class="n">BaseSearcher</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Cross validation optimizer by Genetic Algorithm.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    estimator</span>
+<span class="sd">        scikit-learn estimator like.</span>
+
+<span class="sd">    param_distributions: dict.</span>
+<span class="sd">        Search space.</span>
+
+<span class="sd">    scoring: string or sklearn.metrics.make_scorer.</span>
+<span class="sd">        Evaluation index of search.</span>
+<span class="sd">        When scoring is None, use stimator default scorer and this score greater is better.</span>
+<span class="sd">        </span>
+<span class="sd">    cv: scikit-learn cross-validator or int(number of folds), default=5.</span>
+<span class="sd">        Cross validation setting.</span>
+
+<span class="sd">    max_iter: int, default=10.</span>
+<span class="sd">        Number of search.</span>
+
+<span class="sd">    random_state: int or None, default=None.</span>
+<span class="sd">        The seed used by the random number generator.</span>
+
+<span class="sd">    n_jobs: int, default=1.</span>
+<span class="sd">        Number of jobs to run in parallel.</span>
+
+<span class="sd">    pre_dispatch: int or string, default=&quot;2*n_jobs&quot;.</span>
+<span class="sd">        Controls the number of jobs that get dispatched during parallel.</span>
+
+<span class="sd">    verbose: int(0, 1 or 2), default=0.</span>
+<span class="sd">        Controls the verbosity</span>
+<span class="sd">        </span>
+<span class="sd">        0: don&#39;t display status.</span>
+
+<span class="sd">        1: display status by stdout.</span>
+<span class="sd">        </span>
+<span class="sd">        2: display status by graph.</span>
+
+<span class="sd">    logdir: str or None, default=None.</span>
+<span class="sd">        Path of directory to save log file.</span>
+<span class="sd">        When logdir is None,  log is not saved.</span>
+<span class="sd">        </span>
+<span class="sd">        [directory structure]</span>
+<span class="sd">        </span>
+<span class="sd">        logdir</span>
+<span class="sd">        </span>
+<span class="sd">        |-cv_results</span>
+<span class="sd">        </span>
+<span class="sd">        | |-{model_id}.csv                                      : search log</span>
+<span class="sd">        </span>
+<span class="sd">        | ...</span>
+<span class="sd">        </span>
+<span class="sd">        |-estimators_{model_id}</span>
+<span class="sd">        </span>
+<span class="sd">            |-{model_id}_index{search count}_split{fold count}.pkl: an estimator which is fitted fold train data</span>
+<span class="sd">            </span>
+<span class="sd">            ...</span>
+<span class="sd">            </span>
+<span class="sd">            |-{model_id}_index{search count}_test.pkl             : an estimator which is fitted whole train data.</span>
+
+<span class="sd">    save_estimator: int, default=0.</span>
+<span class="sd">        estimator save setting.</span>
+<span class="sd">        </span>
+<span class="sd">        0: An estimator is not saved.</span>
+<span class="sd">        </span>
+<span class="sd">        1: An estimator which is fitted fold train data is saved per cv-fold.</span>
+<span class="sd">        </span>
+<span class="sd">        2: In addition to 1, an estimator which is fitted whole train data is saved per cv.</span>
+
+<span class="sd">    model_id: str or None, default=None.</span>
+<span class="sd">        This is used to log filename.</span>
+<span class="sd">        When model_id is None, this is generated by date time.</span>
+
+<span class="sd">    refit: bool, default=True.</span>
+<span class="sd">        Refit an estimator using the best found parameters on all train data(=X).</span>
+
+<span class="sd">    iter_pergeneration: int, default=5.</span>
+<span class="sd">        Genetic algorithm&#39;s parameter. Number of iteration per generation (it corresponds to number of population.).</span>
+
+<span class="sd">    param_crossover_proba: float or function, default=0.5.</span>
+<span class="sd">        Genetic algorithm&#39;s parameter. Probability which a certain parameter becomes another parent value.</span>
+
+<span class="sd">        Function whose variable is number of generation could be passed to this variable.</span>
+<span class="sd">        Number of generation&#39; s start is 0. But create population by random sampling in generation 0, so this function is used from generation 1.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; def f(generaion):</span>
+<span class="sd">        &gt;&gt;&gt;     return 0.5 / generaion</span>
+
+<span class="sd">    param_mutation_proba: float or function, default=0.01.</span>
+<span class="sd">        Genetic algorithm&#39;s parameter. Probability which a certain parameter is mutated.</span>
+
+<span class="sd">        Function whose variable is number of generation Could be passed to this variable.</span>
+
+<span class="sd">    random_sampling_proba: float or function, default=0.01.</span>
+<span class="sd">        Genetic algorithm&#39;s parameter. In a certain generation, probability which individual is created by random sampling.</span>
+
+<span class="sd">        Function whose variable is number of generation Could be passed to this variable.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cv_results_ : dict of numpy (masked) ndarrays</span>
+<span class="sd">        A dict with keys as column headers and values as columns, that can be</span>
+<span class="sd">        imported into a pandas ``DataFrame``.</span>
+
+<span class="sd">    best_estimator_ : estimator or dict</span>
+<span class="sd">        Estimator that was chosen by the search.</span>
+
+<span class="sd">    best_score_ : float</span>
+<span class="sd">        Cross-validated score of the best_estimator.</span>
+
+<span class="sd">    best_params_ : dict</span>
+<span class="sd">        Parameter setting that gave the best results on the hold out data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="GAoptCV.__init__"><a class="viewcode-back" href="../../../cvopt.model_selection.html#cvopt.model_selection.GAoptCV.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">estimator</span><span class="p">,</span> <span class="n">param_distributions</span><span class="p">,</span> 
+                 <span class="n">scoring</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> 
+                 <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">pre_dispatch</span><span class="o">=</span><span class="s2">&quot;2*n_jobs&quot;</span><span class="p">,</span> 
+                 <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">logdir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">save_estimator</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">model_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">refit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+                 <span class="n">iter_pergeneration</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">param_crossover_proba</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">param_mutation_proba</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> 
+                 <span class="n">random_sampling_proba</span><span class="o">=</span><span class="mf">0.01</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">estimator</span><span class="o">=</span><span class="n">estimator</span><span class="p">,</span> <span class="n">param_distributions</span><span class="o">=</span><span class="n">param_distributions</span><span class="p">,</span> 
+                         <span class="n">scoring</span><span class="o">=</span><span class="n">scoring</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">cv</span><span class="p">,</span>  <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">pre_dispatch</span><span class="o">=</span><span class="n">pre_dispatch</span><span class="p">,</span> 
+                         <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">logdir</span><span class="o">=</span><span class="n">logdir</span><span class="p">,</span> <span class="n">save_estimator</span><span class="o">=</span><span class="n">save_estimator</span><span class="p">,</span> 
+                         <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span> <span class="n">refit</span><span class="o">=</span><span class="n">refit</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;gaopt&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span> <span class="o">=</span> <span class="n">max_iter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter_pergeneration</span> <span class="o">=</span> <span class="n">iter_pergeneration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">param_crossover_proba</span> <span class="o">=</span> <span class="n">param_crossover_proba</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">param_mutation_proba</span> <span class="o">=</span> <span class="n">param_mutation_proba</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_sampling_proba</span> <span class="o">=</span> <span class="n">random_sampling_proba</span>
+        <span class="k">if</span> <span class="n">random_state</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">random_state</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="GAoptCV.fit"><a class="viewcode-back" href="../../../modules/model_selection/cvopt.model_selection.GAoptCV.html#cvopt.model_selection.GAoptCV.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validation_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+            <span class="n">feature_groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_n_features</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run fit.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------       </span>
+<span class="sd">        X :numpy.array, pandas.DataFrame or scipy.sparse, shape(axis=0) = (n_samples)</span>
+<span class="sd">            Features. Detail depends on estimator.</span>
+
+<span class="sd">        y: np.ndarray or pd.core.frame.DataFrame, shape(axis=0) = (n_samples) or None, default=None.</span>
+<span class="sd">            Target variable. detail depends on estimator.</span>
+
+<span class="sd">        validation_data: tuple(X, y) or None, default=None.</span>
+<span class="sd">            Data to compute validation score. detail depends on estimator.</span>
+<span class="sd">            When validation_data is None, computing validation score is not run.</span>
+
+<span class="sd">        groups: array-like, shape = (n_samples,)  or None, default=None.</span>
+<span class="sd">            Group labels for the samples used while splitting the dataset into train/test set.</span>
+<span class="sd">            (input of scikit-learn cross-validator)</span>
+
+<span class="sd">        feature_groups: array-like, shape = (n_samples,) or None, default=None.</span>
+<span class="sd">            Group labels for the features used while fearture select.</span>
+<span class="sd">            When feature_groups is None, fearture selection is not run.</span>
+
+<span class="sd">        min_n_features: int, default=2.</span>
+<span class="sd">            When number of X&#39;s feature cols is less than min_n_features, return search failure.</span>
+<span class="sd">            </span>
+<span class="sd">            e.g. If estimator has columns sampling function, use this option to avoid X become too small and error.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">Xvalid</span><span class="p">,</span> <span class="n">yvalid</span><span class="p">,</span> <span class="n">cv</span><span class="p">,</span> <span class="n">param_distributions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preproc_fit</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">validation_data</span><span class="o">=</span><span class="n">validation_data</span><span class="p">,</span> <span class="n">feature_groups</span><span class="o">=</span><span class="n">feature_groups</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
+
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">mk_objfunc</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="n">groups</span><span class="p">,</span> <span class="n">feature_groups</span><span class="o">=</span><span class="n">feature_groups</span><span class="p">,</span> <span class="n">feature_axis</span><span class="o">=</span><span class="n">BaseSearcher</span><span class="o">.</span><span class="n">feature_axis</span><span class="p">,</span> 
+                         <span class="n">estimator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">,</span> <span class="n">scoring</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scoring</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">cv</span><span class="p">,</span> 
+                         <span class="n">param_distributions</span><span class="o">=</span><span class="n">param_distributions</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="p">,</span> <span class="n">failedscore</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> 
+                         <span class="n">score_summarizer</span><span class="o">=</span><span class="n">BaseSearcher</span><span class="o">.</span><span class="n">score_summarizer</span><span class="p">,</span> 
+                         <span class="n">Xvalid</span><span class="o">=</span><span class="n">Xvalid</span><span class="p">,</span> <span class="n">yvalid</span><span class="o">=</span><span class="n">yvalid</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">pre_dispatch</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pre_dispatch</span><span class="p">,</span> 
+                         <span class="n">cvsummarizer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cvs</span><span class="p">,</span> <span class="n">save_estimator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">save_estimator</span><span class="p">,</span> <span class="n">min_n_features</span><span class="o">=</span><span class="n">min_n_features</span><span class="p">)</span>
+
+        <span class="k">try</span> <span class="p">:</span>
+            <span class="n">gamin</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">param_distributions</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span><span class="p">,</span> <span class="n">iter_pergeneration</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">iter_pergeneration</span><span class="p">,</span> 
+                  <span class="n">param_crossover_proba</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">param_crossover_proba</span><span class="p">,</span> <span class="n">param_mutation_proba</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">param_mutation_proba</span><span class="p">,</span> 
+                  <span class="n">random_sampling_proba</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_sampling_proba</span><span class="p">,</span> <span class="n">cvsummarizer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cvs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_postproc_fit</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">feature_groups</span><span class="o">=</span><span class="n">feature_groups</span><span class="p">,</span> 
+                           <span class="n">best_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cvs</span><span class="o">.</span><span class="n">best_params_</span><span class="p">,</span> <span class="n">best_score</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cvs</span><span class="o">.</span><span class="n">best_score_</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, gen/5.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

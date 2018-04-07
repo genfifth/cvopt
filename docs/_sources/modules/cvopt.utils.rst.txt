@@ -2,7 +2,11 @@ cvopt\.utils
 ====================
 
 .. automodule:: cvopt.utils
-    :members:
-    :undoc-members:
-    :show-inheritance:
+    ::
 
+.. autosummary::
+   :toctree: utils
+
+   :template: mytemplate.rst
+   cvopt.utils.extract_params
+   cvopt.utils.mk_metafeature

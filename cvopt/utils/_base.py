@@ -24,8 +24,8 @@ def to_nparray(Xy, ravel_1d):
     """
     Convert to np.array
 
-    # Arguments
-    
+    Parameters
+    ----------
     Xy
         X or y
 

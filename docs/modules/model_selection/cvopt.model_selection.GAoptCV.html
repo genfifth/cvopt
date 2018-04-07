@@ -1,0 +1,648 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>cvopt.model_selection.GAoptCV &mdash; cvopt  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="cvopt  documentation" href="../../index.html"/>
+        <link rel="up" title="cvopt.model_selection" href="../cvopt.model_selection.html"/>
+        <link rel="next" title="cvopt.model_selection.HyperoptCV" href="cvopt.model_selection.HyperoptCV.html"/>
+        <link rel="prev" title="cvopt.model_selection.BayesoptCV" href="cvopt.model_selection.BayesoptCV.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> cvopt
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../cvopt.model_selection.html">cvopt.model_selection</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cvopt.model_selection.BayesoptCV.html">cvopt.model_selection.BayesoptCV</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">cvopt.model_selection.GAoptCV</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cvopt.model_selection.HyperoptCV.html">cvopt.model_selection.HyperoptCV</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cvopt.model_selection.SimpleoptCV.html">cvopt.model_selection.SimpleoptCV</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cvopt.search_setting.html">cvopt.search_setting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cvopt.utils.html">cvopt.utils</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">cvopt</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../cvopt.model_selection.html">cvopt.model_selection</a> &raquo;</li>
+        
+      <li>cvopt.model_selection.GAoptCV</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/modules/model_selection/cvopt.model_selection.GAoptCV.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="cvopt-model-selection-gaoptcv">
+<h1>cvopt.model_selection.GAoptCV<a class="headerlink" href="#cvopt-model-selection-gaoptcv" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="cvopt.model_selection.GAoptCV">
+<em class="property">class </em><code class="descname">GAoptCV</code><span class="sig-paren">(</span><em>estimator</em>, <em>param_distributions</em>, <em>scoring=None</em>, <em>cv=5</em>, <em>max_iter=10</em>, <em>random_state=None</em>, <em>n_jobs=1</em>, <em>pre_dispatch='2*n_jobs'</em>, <em>verbose=0</em>, <em>logdir=None</em>, <em>save_estimator=0</em>, <em>model_id=None</em>, <em>refit=True</em>, <em>iter_pergeneration=5</em>, <em>param_crossover_proba=0.5</em>, <em>param_mutation_proba=0.01</em>, <em>random_sampling_proba=0.01</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/cvopt/model_selection/_search.html#GAoptCV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cvopt.model_selection.GAoptCV" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cross validation optimizer by Genetic Algorithm.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>estimator</strong> – scikit-learn estimator like.</li>
+<li><strong>param_distributions</strong> (<em>dict.</em>) – Search space.</li>
+<li><strong>scoring</strong> (<em>string</em><em> or </em><em>sklearn.metrics.make_scorer.</em>) – Evaluation index of search.
+When scoring is None, use stimator default scorer and this score greater is better.</li>
+<li><strong>cv</strong> (<em>scikit-learn cross-validator</em><em> or </em><em>int</em><em>(</em><em>number of folds</em><em>)</em><em>, </em><em>default=5.</em>) – Cross validation setting.</li>
+<li><strong>max_iter</strong> (<em>int</em><em>, </em><em>default=10.</em>) – Number of search.</li>
+<li><strong>random_state</strong> (<em>int</em><em> or </em><em>None</em><em>, </em><em>default=None.</em>) – The seed used by the random number generator.</li>
+<li><strong>n_jobs</strong> (<em>int</em><em>, </em><em>default=1.</em>) – Number of jobs to run in parallel.</li>
+<li><strong>pre_dispatch</strong> (<em>int</em><em> or </em><em>string</em><em>, </em><em>default=&quot;2*n_jobs&quot;.</em>) – Controls the number of jobs that get dispatched during parallel.</li>
+<li><strong>verbose</strong> (<em>int</em><em>(</em><em>0</em><em>, </em><em>1</em><em> or </em><em>2</em><em>)</em><em>, </em><em>default=0.</em>) – <p>Controls the verbosity</p>
+<p>0: don’t display status.</p>
+<p>1: display status by stdout.</p>
+<p>2: display status by graph.</p>
+</li>
+<li><strong>logdir</strong> (<em>str</em><em> or </em><em>None</em><em>, </em><em>default=None.</em>) – <p>Path of directory to save log file.
+When logdir is None,  log is not saved.</p>
+<p>[directory structure]</p>
+<p>logdir</p>
+<p><a href="#id1"><span class="problematic" id="id2">|</span></a>-cv_results</p>
+<div class="line-block">
+<div class="line"><a href="#id3"><span class="problematic" id="id4">|</span></a>-{model_id}.csv                                      : search log</div>
+</div>
+<div class="line-block">
+<div class="line">…</div>
+</div>
+<p><a href="#id5"><span class="problematic" id="id6">|</span></a>-estimators_{model_id}</p>
+<blockquote>
+<div><a href="#id7"><span class="problematic" id="id8">|</span></a>-{model_id}_index{search count}_split{fold count}.pkl: an estimator which is fitted fold train data<p>…</p>
+<p><a href="#id9"><span class="problematic" id="id10">|</span></a>-{model_id}_index{search count}_test.pkl             : an estimator which is fitted whole train data.</p>
+</div></blockquote>
+</li>
+<li><strong>save_estimator</strong> (<em>int</em><em>, </em><em>default=0.</em>) – <p>estimator save setting.</p>
+<p>0: An estimator is not saved.</p>
+<p>1: An estimator which is fitted fold train data is saved per cv-fold.</p>
+<p>2: In addition to 1, an estimator which is fitted whole train data is saved per cv.</p>
+</li>
+<li><strong>model_id</strong> (<em>str</em><em> or </em><em>None</em><em>, </em><em>default=None.</em>) – This is used to log filename.
+When model_id is None, this is generated by date time.</li>
+<li><strong>refit</strong> (<em>bool</em><em>, </em><em>default=True.</em>) – Refit an estimator using the best found parameters on all train data(=X).</li>
+<li><strong>iter_pergeneration</strong> (<em>int</em><em>, </em><em>default=5.</em>) – Genetic algorithm’s parameter. Number of iteration per generation (it corresponds to number of population.).</li>
+<li><strong>param_crossover_proba</strong> (<em>float</em><em> or </em><em>function</em><em>, </em><em>default=0.5.</em>) – <p>Genetic algorithm’s parameter. Probability which a certain parameter becomes another parent value.</p>
+<p>Function whose variable is number of generation could be passed to this variable.
+Number of generation’ s start is 0. But create population by random sampling in generation 0, so this function is used from generation 1.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">generaion</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="mf">0.5</span> <span class="o">/</span> <span class="n">generaion</span>
+</pre></div>
+</div>
+</li>
+<li><strong>param_mutation_proba</strong> (<em>float</em><em> or </em><em>function</em><em>, </em><em>default=0.01.</em>) – <p>Genetic algorithm’s parameter. Probability which a certain parameter is mutated.</p>
+<p>Function whose variable is number of generation Could be passed to this variable.</p>
+</li>
+<li><strong>random_sampling_proba</strong> (<em>float</em><em> or </em><em>function</em><em>, </em><em>default=0.01.</em>) – <p>Genetic algorithm’s parameter. In a certain generation, probability which individual is created by random sampling.</p>
+<p>Function whose variable is number of generation Could be passed to this variable.</p>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="cvopt.model_selection.GAoptCV.cv_results_">
+<code class="descname">cv_results_</code><a class="headerlink" href="#cvopt.model_selection.GAoptCV.cv_results_" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>dict of numpy (masked) ndarrays</em> – A dict with keys as column headers and values as columns, that can be
+imported into a pandas <code class="docutils literal"><span class="pre">DataFrame</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cvopt.model_selection.GAoptCV.best_estimator_">
+<code class="descname">best_estimator_</code><a class="headerlink" href="#cvopt.model_selection.GAoptCV.best_estimator_" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>estimator or dict</em> – Estimator that was chosen by the search.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cvopt.model_selection.GAoptCV.best_score_">
+<code class="descname">best_score_</code><a class="headerlink" href="#cvopt.model_selection.GAoptCV.best_score_" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – Cross-validated score of the best_estimator.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cvopt.model_selection.GAoptCV.best_params_">
+<code class="descname">best_params_</code><a class="headerlink" href="#cvopt.model_selection.GAoptCV.best_params_" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>dict</em> – Parameter setting that gave the best results on the hold out data.</p>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="../../cvopt.model_selection.html#cvopt.model_selection.GAoptCV.__init__" title="cvopt.model_selection.GAoptCV.__init__"><code class="xref py py-obj docutils literal"><span class="pre">__init__</span></code></a>(estimator,&nbsp;param_distributions[,&nbsp;…])</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#cvopt.model_selection.GAoptCV.apply" title="cvopt.model_selection.GAoptCV.apply"><code class="xref py py-obj docutils literal"><span class="pre">apply</span></code></a>(X)</td>
+<td>Call apply on the estimator with the best found parameters.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#cvopt.model_selection.GAoptCV.classes_" title="cvopt.model_selection.GAoptCV.classes_"><code class="xref py py-obj docutils literal"><span class="pre">classes_</span></code></a>()</td>
+<td>Retern list of target classes.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#cvopt.model_selection.GAoptCV.decision_function" title="cvopt.model_selection.GAoptCV.decision_function"><code class="xref py py-obj docutils literal"><span class="pre">decision_function</span></code></a>(X)</td>
+<td>Call decision_function on the estimator with the best found parameters.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#cvopt.model_selection.GAoptCV.fit" title="cvopt.model_selection.GAoptCV.fit"><code class="xref py py-obj docutils literal"><span class="pre">fit</span></code></a>(X[,&nbsp;y,&nbsp;validation_data,&nbsp;groups,&nbsp;…])</td>
+<td>Run fit.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#cvopt.model_selection.GAoptCV.get_params" title="cvopt.model_selection.GAoptCV.get_params"><code class="xref py py-obj docutils literal"><span class="pre">get_params</span></code></a>([deep])</td>
+<td>Get parameters for this estimator.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#cvopt.model_selection.GAoptCV.inverse_transform" title="cvopt.model_selection.GAoptCV.inverse_transform"><code class="xref py py-obj docutils literal"><span class="pre">inverse_transform</span></code></a>(Xt)</td>
+<td>Call inverse_transform on the estimator with the best found parameters.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#cvopt.model_selection.GAoptCV.predict" title="cvopt.model_selection.GAoptCV.predict"><code class="xref py py-obj docutils literal"><span class="pre">predict</span></code></a>(X)</td>
+<td>Call predict on the estimator with the best found parameters.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#cvopt.model_selection.GAoptCV.predict_log_proba" title="cvopt.model_selection.GAoptCV.predict_log_proba"><code class="xref py py-obj docutils literal"><span class="pre">predict_log_proba</span></code></a>(X)</td>
+<td>Call predict_log_proba on the estimator with the best found parameters.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#cvopt.model_selection.GAoptCV.predict_proba" title="cvopt.model_selection.GAoptCV.predict_proba"><code class="xref py py-obj docutils literal"><span class="pre">predict_proba</span></code></a>(X)</td>
+<td>Call predict_proba on the estimator with the best found parameters.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#cvopt.model_selection.GAoptCV.score_summarizer" title="cvopt.model_selection.GAoptCV.score_summarizer"><code class="xref py py-obj docutils literal"><span class="pre">score_summarizer</span></code></a>(a[,&nbsp;axis,&nbsp;dtype,&nbsp;out,&nbsp;keepdims])</td>
+<td>Compute the arithmetic mean along the specified axis.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#cvopt.model_selection.GAoptCV.set_params" title="cvopt.model_selection.GAoptCV.set_params"><code class="xref py py-obj docutils literal"><span class="pre">set_params</span></code></a>(**params)</td>
+<td>Set the parameters of this estimator.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#cvopt.model_selection.GAoptCV.transform" title="cvopt.model_selection.GAoptCV.transform"><code class="xref py py-obj docutils literal"><span class="pre">transform</span></code></a>(X)</td>
+<td>Call transform on the estimator with the best found parameters.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="cvopt.model_selection.GAoptCV.apply">
+<code class="descname">apply</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="headerlink" href="#cvopt.model_selection.GAoptCV.apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call apply on the estimator with the best found parameters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>numpy.array</em><em>, </em><em>pandas.DataFrame</em><em> or </em><em>scipy.sparse</em><em>, </em><em>shape</em><em>(</em><em>axis=0</em><em>) </em><em>=</em><em> (</em><em>n_samples</em><em>)</em>) – Features. Detail depends on estimator.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cvopt.model_selection.GAoptCV.classes_">
+<code class="descname">classes_</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cvopt.model_selection.GAoptCV.classes_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retern list of target classes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cvopt.model_selection.GAoptCV.decision_function">
+<code class="descname">decision_function</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="headerlink" href="#cvopt.model_selection.GAoptCV.decision_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call decision_function on the estimator with the best found parameters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>numpy.array</em><em>, </em><em>pandas.DataFrame</em><em> or </em><em>scipy.sparse</em><em>, </em><em>shape</em><em>(</em><em>axis=0</em><em>) </em><em>=</em><em> (</em><em>n_samples</em><em>)</em>) – Features. Detail depends on estimator.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cvopt.model_selection.GAoptCV.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em>, <em>validation_data=None</em>, <em>groups=None</em>, <em>feature_groups=None</em>, <em>min_n_features=2</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/cvopt/model_selection/_search.html#GAoptCV.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cvopt.model_selection.GAoptCV.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run fit.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>X</strong> (<em>numpy.array</em><em>, </em><em>pandas.DataFrame</em><em> or </em><em>scipy.sparse</em><em>, </em><em>shape</em><em>(</em><em>axis=0</em><em>) </em><em>=</em><em> (</em><em>n_samples</em><em>)</em>) – Features. Detail depends on estimator.</li>
+<li><strong>y</strong> (<em>np.ndarray</em><em> or </em><em>pd.core.frame.DataFrame</em><em>, </em><em>shape</em><em>(</em><em>axis=0</em><em>) </em><em>=</em><em> (</em><em>n_samples</em><em>) or </em><em>None</em><em>, </em><em>default=None.</em>) – Target variable. detail depends on estimator.</li>
+<li><strong>validation_data</strong> (<em>tuple</em><em>(</em><em>X</em><em>, </em><em>y</em><em>) or </em><em>None</em><em>, </em><em>default=None.</em>) – Data to compute validation score. detail depends on estimator.
+When validation_data is None, computing validation score is not run.</li>
+<li><strong>groups</strong> (<em>array-like</em><em>, </em><em>shape =</em><em> (</em><em>n_samples</em><em>,</em><em>)  or </em><em>None</em><em>, </em><em>default=None.</em>) – Group labels for the samples used while splitting the dataset into train/test set.
+(input of scikit-learn cross-validator)</li>
+<li><strong>feature_groups</strong> (<em>array-like</em><em>, </em><em>shape =</em><em> (</em><em>n_samples</em><em>,</em><em>) or </em><em>None</em><em>, </em><em>default=None.</em>) – Group labels for the features used while fearture select.
+When feature_groups is None, fearture selection is not run.</li>
+<li><strong>min_n_features</strong> (<em>int</em><em>, </em><em>default=2.</em>) – <p>When number of X’s feature cols is less than min_n_features, return search failure.</p>
+<p>e.g. If estimator has columns sampling function, use this option to avoid X become too small and error.</p>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cvopt.model_selection.GAoptCV.get_params">
+<code class="descname">get_params</code><span class="sig-paren">(</span><em>deep=True</em><span class="sig-paren">)</span><a class="headerlink" href="#cvopt.model_selection.GAoptCV.get_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get parameters for this estimator.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>deep</strong> (<em>boolean</em><em>, </em><em>optional</em>) – If True, will return the parameters for this estimator and
+contained subobjects that are estimators.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>params</strong> – Parameter names mapped to their values.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">mapping of string to any</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cvopt.model_selection.GAoptCV.inverse_transform">
+<code class="descname">inverse_transform</code><span class="sig-paren">(</span><em>Xt</em><span class="sig-paren">)</span><a class="headerlink" href="#cvopt.model_selection.GAoptCV.inverse_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call inverse_transform on the estimator with the best found parameters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Xt</strong> (<em>numpy.array</em><em>, </em><em>pandas.DataFrame</em><em> or </em><em>scipy.sparse</em><em>, </em><em>shape</em><em>(</em><em>axis=0</em><em>) </em><em>=</em><em> (</em><em>n_samples</em><em>)</em>) – Features. Detail depends on estimator.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cvopt.model_selection.GAoptCV.predict">
+<code class="descname">predict</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="headerlink" href="#cvopt.model_selection.GAoptCV.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call predict on the estimator with the best found parameters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>numpy.array</em><em>, </em><em>pandas.DataFrame</em><em> or </em><em>scipy.sparse</em><em>, </em><em>shape</em><em>(</em><em>axis=0</em><em>) </em><em>=</em><em> (</em><em>n_samples</em><em>)</em>) – Features. Detail depends on estimator.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cvopt.model_selection.GAoptCV.predict_log_proba">
+<code class="descname">predict_log_proba</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="headerlink" href="#cvopt.model_selection.GAoptCV.predict_log_proba" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call predict_log_proba on the estimator with the best found parameters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>numpy.array</em><em>, </em><em>pandas.DataFrame</em><em> or </em><em>scipy.sparse</em><em>, </em><em>shape</em><em>(</em><em>axis=0</em><em>) </em><em>=</em><em> (</em><em>n_samples</em><em>)</em>) – Features. Detail depends on estimator.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cvopt.model_selection.GAoptCV.predict_proba">
+<code class="descname">predict_proba</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="headerlink" href="#cvopt.model_selection.GAoptCV.predict_proba" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call predict_proba on the estimator with the best found parameters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>numpy.array</em><em>, </em><em>pandas.DataFrame</em><em> or </em><em>scipy.sparse</em><em>, </em><em>shape</em><em>(</em><em>axis=0</em><em>) </em><em>=</em><em> (</em><em>n_samples</em><em>)</em>) – Features. Detail depends on estimator.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cvopt.model_selection.GAoptCV.score_summarizer">
+<code class="descname">score_summarizer</code><span class="sig-paren">(</span><em>a</em>, <em>axis=None</em>, <em>dtype=None</em>, <em>out=None</em>, <em>keepdims=&lt;class 'numpy._globals._NoValue'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cvopt.model_selection.GAoptCV.score_summarizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the arithmetic mean along the specified axis.</p>
+<p>Returns the average of the array elements.  The average is taken over
+the flattened array by default, otherwise over the specified axis.
+<cite>float64</cite> intermediate and return values are used for integer inputs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>a</strong> (<em>array_like</em>) – Array containing numbers whose mean is desired. If <cite>a</cite> is not an
+array, a conversion is attempted.</li>
+<li><strong>axis</strong> (<em>None</em><em> or </em><em>int</em><em> or </em><em>tuple of ints</em><em>, </em><em>optional</em>) – <p>Axis or axes along which the means are computed. The default is to
+compute the mean of the flattened array.</p>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 1.7.0.</span></p>
+</div>
+<p>If this is a tuple of ints, a mean is performed over multiple axes,
+instead of a single axis or all the axes as before.</p>
+</li>
+<li><strong>dtype</strong> (<em>data-type</em><em>, </em><em>optional</em>) – Type to use in computing the mean.  For integer inputs, the default
+is <cite>float64</cite>; for floating point inputs, it is the same as the
+input dtype.</li>
+<li><strong>out</strong> (<em>ndarray</em><em>, </em><em>optional</em>) – Alternate output array in which to place the result.  The default
+is <code class="docutils literal"><span class="pre">None</span></code>; if provided, it must have the same shape as the
+expected output, but the type will be cast if necessary.
+See <cite>doc.ufuncs</cite> for details.</li>
+<li><strong>keepdims</strong> (<em>bool</em><em>, </em><em>optional</em>) – <p>If this is set to True, the axes which are reduced are left
+in the result as dimensions with size one. With this option,
+the result will broadcast correctly against the input array.</p>
+<p>If the default value is passed, then <cite>keepdims</cite> will not be
+passed through to the <cite>mean</cite> method of sub-classes of
+<cite>ndarray</cite>, however any non-default value will be.  If the
+sub-classes <cite>sum</cite> method does not implement <cite>keepdims</cite> any
+exceptions will be raised.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>m</strong> – If <cite>out=None</cite>, returns a new array containing the mean values,
+otherwise a reference to the output array is returned.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray, see dtype parameter above</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="docutils">
+<dt><code class="xref py py-meth docutils literal"><span class="pre">average()</span></code></dt>
+<dd>Weighted average</dd>
+</dl>
+<p class="last"><code class="xref py py-meth docutils literal"><span class="pre">std()</span></code>, <code class="xref py py-meth docutils literal"><span class="pre">var()</span></code>, <code class="xref py py-meth docutils literal"><span class="pre">nanmean()</span></code>, <code class="xref py py-meth docutils literal"><span class="pre">nanstd()</span></code>, <code class="xref py py-meth docutils literal"><span class="pre">nanvar()</span></code></p>
+</div>
+<p class="rubric">Notes</p>
+<p>The arithmetic mean is the sum of the elements along the axis divided
+by the number of elements.</p>
+<p>Note that for floating-point input, the mean is computed using the
+same precision the input has.  Depending on the input data, this can
+cause the results to be inaccurate, especially for <cite>float32</cite> (see
+example below).  Specifying a higher-precision accumulator using the
+<cite>dtype</cite> keyword can alleviate this issue.</p>
+<p>By default, <cite>float16</cite> results are computed using <cite>float32</cite> intermediates
+for extra precision.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">2.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">array([ 2.,  3.])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">array([ 1.5,  3.5])</span>
+</pre></div>
+</div>
+<p>In single precision, <cite>mean</cite> can be inaccurate:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">512</span><span class="o">*</span><span class="mi">512</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">0.54999924</span>
+</pre></div>
+</div>
+<p>Computing the mean in float64 is more accurate:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+<span class="go">0.55000000074505806</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="cvopt.model_selection.GAoptCV.set_params">
+<code class="descname">set_params</code><span class="sig-paren">(</span><em>**params</em><span class="sig-paren">)</span><a class="headerlink" href="#cvopt.model_selection.GAoptCV.set_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the parameters of this estimator.</p>
+<p>The method works on simple estimators as well as on nested objects
+(such as pipelines). The latter have parameters of the form
+<code class="docutils literal"><span class="pre">&lt;component&gt;__&lt;parameter&gt;</span></code> so that it’s possible to update each
+component of a nested object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">self</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cvopt.model_selection.GAoptCV.transform">
+<code class="descname">transform</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="headerlink" href="#cvopt.model_selection.GAoptCV.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call transform on the estimator with the best found parameters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>numpy.array</em><em>, </em><em>pandas.DataFrame</em><em> or </em><em>scipy.sparse</em><em>, </em><em>shape</em><em>(</em><em>axis=0</em><em>) </em><em>=</em><em> (</em><em>n_samples</em><em>)</em>) – Features. Detail depends on estimator.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="cvopt.model_selection.HyperoptCV.html" class="btn btn-neutral float-right" title="cvopt.model_selection.HyperoptCV" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="cvopt.model_selection.BayesoptCV.html" class="btn btn-neutral" title="cvopt.model_selection.BayesoptCV" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, gen/5.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

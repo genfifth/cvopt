@@ -1,0 +1,404 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>cvopt.search_setting._base &mdash; cvopt  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="cvopt  documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> cvopt
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/cvopt.model_selection.html">cvopt.model_selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/cvopt.search_setting.html">cvopt.search_setting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/cvopt.utils.html">cvopt.utils</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">cvopt</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>cvopt.search_setting._base</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for cvopt.search_setting._base</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
+<span class="kn">import</span> <span class="nn">types</span>
+<span class="kn">from</span> <span class="nn">hyperopt</span> <span class="k">import</span> <span class="n">hp</span>
+
+<span class="k">class</span> <span class="nc">ParamDist</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    cvopt standard param setting class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+
+<div class="viewcode-block" id="search_category"><a class="viewcode-back" href="../../../modules/search_setting/cvopt.search_setting.search_category.html#cvopt.search_setting.search_category">[docs]</a><span class="k">def</span> <span class="nf">search_category</span><span class="p">(</span><span class="n">categories</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Set search target distribution for categorical variable.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    categories: list</span>
+<span class="sd">        search target categories.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cvopt.search_setting.PramDist</span>
+<span class="sd">        setting class</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">categories</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;categories is must be list&quot;</span><span class="p">)</span>
+    <span class="n">paramdist</span> <span class="o">=</span> <span class="n">ParamDist</span><span class="p">(</span><span class="n">valtype</span><span class="o">=</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="n">categories</span><span class="o">=</span><span class="n">categories</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">paramdist</span></div>
+
+
+<div class="viewcode-block" id="search_numeric"><a class="viewcode-back" href="../../../modules/search_setting/cvopt.search_setting.search_numeric.html#cvopt.search_setting.search_numeric">[docs]</a><span class="k">def</span> <span class="nf">search_numeric</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Set search target distribution for numerical variable.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    low: int or float</span>
+<span class="sd">        lower limit of search range.</span>
+
+<span class="sd">    high: int or float</span>
+<span class="sd">        high limit of search range.</span>
+
+<span class="sd">    dtype: &quot;int&quot; or &quot;float&quot;</span>
+<span class="sd">        variable&#39;s dtype.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cvopt.search_setting.PramDist</span>
+<span class="sd">        setting class</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">dtype</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;int&quot;</span><span class="p">,</span> <span class="s2">&quot;float&quot;</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;dtype is must be &quot;int&quot; or &quot;float&quot;&#39;</span><span class="p">)</span>
+        
+    <span class="n">paramdist</span> <span class="o">=</span> <span class="n">ParamDist</span><span class="p">(</span><span class="n">valtype</span><span class="o">=</span><span class="s2">&quot;numeric&quot;</span><span class="p">,</span> 
+                          <span class="n">low</span><span class="o">=</span><span class="n">low</span><span class="p">,</span> 
+                          <span class="n">high</span><span class="o">=</span><span class="n">high</span><span class="p">,</span> 
+                          <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> 
+                         <span class="p">)</span>
+    <span class="k">return</span> <span class="n">paramdist</span></div>
+
+
+<span class="k">def</span> <span class="nf">to_func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">FunctionType</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">x</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">_x</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">x</span>
+        <span class="k">return</span> <span class="n">f</span>
+
+
+<span class="k">class</span> <span class="nc">category_sampler</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">categories</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">categories</span> <span class="o">=</span> <span class="n">categories</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dist</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">categories</span><span class="p">))</span>
+        
+    <span class="k">def</span> <span class="nf">rvs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">categories</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dist</span><span class="o">.</span><span class="n">rvs</span><span class="p">()]</span>
+
+<span class="k">def</span> <span class="nf">get_params</span><span class="p">(</span><span class="n">param_distributions</span><span class="p">,</span> <span class="n">tgt_key</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    get params from param_distributions (dict, key:param_name, val:scipy.stat class).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">tgt_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">param_distributions</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">ret</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_distributions</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">rvs</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">ret</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">tgt_key</span><span class="p">:</span><span class="n">param_distributions</span><span class="p">[</span><span class="n">tgt_key</span><span class="p">]</span><span class="o">.</span><span class="n">rvs</span><span class="p">()}</span>
+
+
+<span class="k">def</span> <span class="nf">_conv_hyperopt_param_dist</span><span class="p">(</span><span class="n">param_name</span><span class="p">,</span> <span class="n">param_dist</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;valtype&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;numeric&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;dtype&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;int&quot;</span><span class="p">:</span>
+            <span class="n">param_dist</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">param_name</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;high&quot;</span><span class="p">]))</span>
+        <span class="k">elif</span> <span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;dtype&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;float&quot;</span><span class="p">:</span>
+            <span class="n">param_dist</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">param_name</span><span class="p">,</span> 
+                                    <span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;low&quot;</span><span class="p">],</span> 
+                                    <span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;high&quot;</span><span class="p">])</span>            
+    <span class="k">elif</span> <span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;valtype&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;category&quot;</span><span class="p">:</span>
+        <span class="n">param_dist</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">param_name</span><span class="p">,</span> <span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;categories&quot;</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">param_dist</span>
+
+<span class="k">def</span> <span class="nf">_conv_gpyopt_param_dist</span><span class="p">(</span><span class="n">param_name</span><span class="p">,</span> <span class="n">param_dist</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;valtype&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;numeric&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;dtype&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;int&quot;</span><span class="p">:</span>
+            <span class="n">param_dist</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span><span class="n">param_name</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;discrete&quot;</span><span class="p">,</span> 
+                          <span class="s2">&quot;domain&quot;</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;low&quot;</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;high&quot;</span><span class="p">])</span><span class="o">+</span><span class="mi">1</span><span class="p">)}</span>
+        <span class="k">elif</span> <span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;dtype&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;float&quot;</span><span class="p">:</span>
+            <span class="n">param_dist</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span><span class="n">param_name</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;continuous&quot;</span><span class="p">,</span> 
+                          <span class="s2">&quot;domain&quot;</span><span class="p">:(</span><span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;low&quot;</span><span class="p">],</span> <span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;high&quot;</span><span class="p">])}</span>         
+    <span class="k">elif</span> <span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;valtype&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;category&quot;</span><span class="p">:</span>
+        <span class="n">param_dist</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span><span class="n">param_name</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;categorical&quot;</span><span class="p">,</span> 
+                      <span class="s2">&quot;domain&quot;</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;categories&quot;</span><span class="p">])),</span> 
+                      <span class="s2">&quot;categories&quot;</span><span class="p">:</span><span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;categories&quot;</span><span class="p">]}</span>
+    <span class="k">return</span> <span class="n">param_dist</span>
+
+<span class="k">def</span> <span class="nf">_conv_ga_param_dist</span><span class="p">(</span><span class="n">param_name</span><span class="p">,</span> <span class="n">param_dist</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;valtype&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;numeric&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;dtype&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;int&quot;</span><span class="p">:</span>
+            <span class="n">param_dist</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;low&quot;</span><span class="p">],</span> <span class="n">high</span><span class="o">=</span><span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;high&quot;</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;dtype&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;float&quot;</span><span class="p">:</span>
+            <span class="n">param_dist</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;low&quot;</span><span class="p">],</span> <span class="n">scale</span><span class="o">=</span><span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;high&quot;</span><span class="p">]</span><span class="o">-</span><span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;low&quot;</span><span class="p">])</span>            
+    <span class="k">elif</span> <span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;valtype&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;category&quot;</span><span class="p">:</span>
+        <span class="n">param_dist</span> <span class="o">=</span> <span class="n">category_sampler</span><span class="p">(</span><span class="n">categories</span><span class="o">=</span><span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;categories&quot;</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">param_dist</span>
+
+<span class="k">def</span> <span class="nf">conv_param_distributions</span><span class="p">(</span><span class="n">param_distributions</span><span class="p">,</span> <span class="n">backend</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert param_distributions from cvopt style to backend style.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;hyperopt&quot;</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;bayesopt&quot;</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;gaopt&quot;</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="p">{}</span>
+    
+    <span class="k">for</span> <span class="n">param_name</span> <span class="ow">in</span> <span class="n">param_distributions</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">param_distributions</span><span class="p">[</span><span class="n">param_name</span><span class="p">])</span> <span class="o">==</span> <span class="n">ParamDist</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;hyperopt&quot;</span><span class="p">:</span>
+                    <span class="n">ret</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">_conv_hyperopt_param_dist</span><span class="p">(</span><span class="n">param_name</span><span class="p">,</span> <span class="n">param_distributions</span><span class="p">[</span><span class="n">param_name</span><span class="p">])</span>
+                <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;bayesopt&quot;</span><span class="p">:</span>
+                    <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_conv_gpyopt_param_dist</span><span class="p">(</span><span class="n">param_name</span><span class="p">,</span> <span class="n">param_distributions</span><span class="p">[</span><span class="n">param_name</span><span class="p">]))</span>
+                <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;gaopt&quot;</span><span class="p">:</span>
+                    <span class="n">ret</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">_conv_ga_param_dist</span><span class="p">(</span><span class="n">param_name</span><span class="p">,</span> <span class="n">param_distributions</span><span class="p">[</span><span class="n">param_name</span><span class="p">])</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;parameter:&quot;</span><span class="o">+</span> <span class="n">param_name</span> <span class="o">+</span> <span class="s2">&quot;&#39;s setting is not supported.&quot;</span><span class="p">)</span>
+                
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;hyperopt&quot;</span><span class="p">:</span>
+                <span class="n">ret</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_distributions</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;bayesopt&quot;</span><span class="p">:</span>
+                <span class="k">if</span><span class="p">(</span><span class="n">param_distributions</span><span class="p">[</span><span class="n">param_name</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;categorical&quot;</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="s2">&quot;categories&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">param_distributions</span><span class="p">[</span><span class="n">param_name</span><span class="p">]):</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;If type is categorical, parameter_distributions&#39;s value must have `categories` key.&quot;</span><span class="p">)</span>
+                <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">param_distributions</span><span class="p">[</span><span class="n">param_name</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;gaopt&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param_distributions</span><span class="p">[</span><span class="n">param_name</span><span class="p">],</span> <span class="n">sp</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">_distn_infrastructure</span><span class="o">.</span><span class="n">rv_frozen</span><span class="p">):</span>
+                    <span class="n">ret</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_distributions</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;parameter_distributions&#39;s value must be search_setting.search_numeric, search_setting.search_category, or scipy.stats class.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ret</span>
+
+
+<span class="k">def</span> <span class="nf">decode_params</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">param_distributions</span><span class="p">,</span> <span class="n">backend</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Decode params from backend style to dict(key:param name, value:param value).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;hyperopt&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">params</span>
+    <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;bayesopt&quot;</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">param_dist</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">param_distributions</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;categorical&quot;</span><span class="p">:</span>
+                <span class="n">ret</span><span class="p">[</span><span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;categories&quot;</span><span class="p">][</span><span class="nb">int</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">])]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ret</span><span class="p">[</span><span class="n">param_dist</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">ret</span>  
+    <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;gaopt&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">params</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, gen/5.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

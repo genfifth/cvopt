@@ -19,8 +19,8 @@ class CVSummarizer:
     """
     Summarize cross validation results.
 
-    # Arguments
-    
+    Parameters
+    ----------
     cvsize: int.
         Number of folds.
 
@@ -47,9 +47,9 @@ class CVSummarizer:
             mk_dir(path, error_level=0)
             self.save_path = os.path.join(path, str(self.model_id))
             
-        if (save_estimator > 0):
-            mk_dir(os.path.join(self.logdir, "estimators", self.model_id), 
-                   error_level=1, msg="save in this directory.")
+            if (save_estimator > 0):
+                mk_dir(os.path.join(self.logdir, "estimators", self.model_id), 
+                    error_level=1, msg="save in this directory.")
 
         self.params_keys = ["param_" + str(i) for i in paraname_list]
         self.train_score_keys = ["split"+str(i)+"_train_score" for i in range(cvsize)]
@@ -57,6 +57,9 @@ class CVSummarizer:
         self.cv_results_ = OrderedDict({"index":[], "params":[]})
         self.next_elapsed_time = np.nan
         self.nbv = None
+
+        self.best_params_ = None
+        self.best_score_ = np.nan
 
     def __call__(self):
         return self.cv_results_
@@ -84,6 +87,16 @@ class CVSummarizer:
             train_score = -1*train_score
             validation_score = -1*validation_score
             return cv_train_scores, cv_test_scores, train_score, validation_score
+
+    def _update_best(self):
+        if not np.isnan(self.cv_results_[self.score_summarizer_name+"_test_score"]).all():
+            if self.sign == 1:
+                index = np.nanargmax(self.cv_results_[self.score_summarizer_name+"_test_score"])
+            else:
+                index = np.nanargmin(self.cv_results_[self.score_summarizer_name+"_test_score"])
+
+            self.best_params_ = self.cv_results_["params"][index]
+            self.best_score_ = self.cv_results_[self.score_summarizer_name+"_test_score"][index]
             
     def store_cv_result(self, cv_train_scores, cv_test_scores, params, fit_times, score_times, 
                         feature_select, X_shape, start_time,
@@ -128,6 +141,7 @@ class CVSummarizer:
 
         self._store("model_id", self.model_id)
         self._save()
+        self._update_best()
 
     def _estimate_time_sec(self, params):
         df = pd.DataFrame(self.cv_results_["params"]+[params])
@@ -163,15 +177,8 @@ class CVSummarizer:
 
             if self.verbose == 1:
                 start_time = start_time.strftime("%m/%d %H:%M")
-                if n_search == 0:
-                    best_score = np.nan
-                else:
-                    if self.sign == 1:
-                        best_score = np.round(np.nanmax(self.cv_results_[self.score_summarizer_name+"_test_score"]), 2)
-                    else:
-                        best_score = np.round(np.nanmin(self.cv_results_[self.score_summarizer_name+"_test_score"]), 2)
                 sys.stdout.write("\rNum_of_search:%s  Start:%s  End(estimated):%s  Best_score:%s" 
-                                %(n_search, start_time, estimated_end_time, best_score))
+                                %(n_search, start_time, estimated_end_time, np.round(self.best_score_, 2)))
             elif self.verbose == 2:
                 if self.nbv is None:
                     if n_search > 0:

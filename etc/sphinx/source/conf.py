@@ -37,10 +37,12 @@ sys.path.insert(0, os.path.abspath('../../..'))
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinx.ext.autosummary', 'sphinx.ext.viewcode']
+autosummary_generate = True
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+#templates_path = ['_templates']
+templates_path = ['templates']
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -48,7 +50,7 @@ templates_path = ['_templates']
 source_suffix = '.rst'
 # source_suffix = ['.rst', '.md']
 # from recommonmark.parser import CommonMarkParser
-# source_parsers = {'.md': CommonMarkParser}
+# source_parsers = {'.md': CommonMarkParser
 
 # The master toctree document.
 master_doc = 'index'
@@ -165,6 +167,10 @@ texinfo_documents = [
      'Miscellaneous'),
 ]
 
+autodoc_default_flags = ['members', #'private-members', 'special-members',
+                         #'undoc-members',
+                         #'show-inheritance'
+                         ]
 
 def skip(app, what, name, obj, skip, options):
     if name == "__init__":

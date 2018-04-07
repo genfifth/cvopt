@@ -10,8 +10,8 @@ def extract_params(logdir, model_id, target_index, feature_groups=None):
     """
     Extract parameters from cvopt logfile.
     
-    # Arguments
-        
+    Parameters
+    ----------
     logdir: str.
         cvopt's log directory path.
     
@@ -29,8 +29,8 @@ def extract_params(logdir, model_id, target_index, feature_groups=None):
         feature select flag is bool vector. 
         If this value is True, optimizer recommend using corresponding column.
     
-    # Return
-        
+    Returns
+    -------  
     estimator_params: dict
         estimator parameters of the target model.
     
@@ -75,8 +75,8 @@ def mk_metafeature(X, y, logdir, model_id, target_index, cv,
     """
     Make meta feature for stacking(https://mlwave.com/kaggle-ensembling-guide/)
     
-    # Arguments
-        
+    Parameters
+    ----------
     X :np.ndarray or pd.core.frame.DataFrame, shape(axis=0) = (n_samples)
         Features that was used in optimizer training. Detail depends on estimator.
         Meta feature correspond to X is made using cross validation's estimator.
@@ -111,9 +111,9 @@ def mk_metafeature(X, y, logdir, model_id, target_index, cv,
     merge: bool, default=True.
         if True, return matrix which result per cv is merged into.
     
-    # Return
-        
-    X_meta or (X_meta, X_meta_validation_data) :np.ndarray or tuple of np.ndarray.
+    Returns
+    -------
+    X_meta or X_meta, X_meta_validation_data: np.ndarray or tuple of np.ndarray.
         When validation_data is input, return tuple.
         
     """

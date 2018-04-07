@@ -8,6 +8,10 @@ This module has API like scikit-learn cross validation class and easy to use.
 * Optimize parameters and feature selections.
 * Integrated visualization and archive log.
 * API like scikit-learn cross validation class.
+   * Support Algorithm
+      * Sequential Model Based Global Optimization (Hyperopt)
+      * Bayesian Optimization (GpyOpt)
+      * Genetic Algorithm
 
 # Installation   
 ```bash
@@ -18,20 +22,24 @@ requires:
 * NumPy
 * pandas
 * scikit-learn
-* hyperopt
+* Hyperopt
+* Gpy
+* GpyOpt
 * bokeh
    
 # Quick start -search can be written in 5 lines.-
 ```python
-param_distributions = {"penalty":hp.choice("penalty", ["l1", "l2"]), "tol":hp.loguniform("tol", -4, -2), 
-                       "C":hp.loguniform("C", -3, 3), "class_weight":hp.choice("class_weight", [None, "balanced"])}
+param_distributions = {"penalty": search_category(['l1', 'l2']), "C": search_numeric(0, 3, "float"), 
+                       "tol" : search_numeric(0, 4, "float"),  "class_weight" : search_category([None, "balanced"])}
 feature_groups = np.random.randint(0, 5, Xtrain.shape[1]) 
-hpcv = hyperoptCV(estimator=LogisticRegression(), param_distributions=param_distributions)
+hpcv = SimpleoptCV(estimator=LogisticRegression(), param_distributions=param_distributions)
 hpcv.fit(Xtrain, ytrain, feature_groups=feature_groups)
 ```
    
 # Documents
-[Basic usage](https://github.com/genfifth/cvopt/blob/master/notebooks/basic_usage.ipynb)   
+[Basic usage](https://github.com/genfifth/cvopt/blob/master/notebooks/basic_usage.ipynb)
+[Basic usage(jp)](https://github.com/genfifth/cvopt/blob/master/notebooks/basic_usage_jp.ipynb)
+   
 [API reference](https://genfifth.github.io/cvopt/)
 
 # Changelog
