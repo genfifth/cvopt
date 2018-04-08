@@ -6,8 +6,14 @@ This module has API like scikit-learn cross validation class and easy to use.
 
 .. image:: ../../images/readme_00.PNG
 
+In Data Science's modeling, sometime would like to
+* use various search algorithms on the same interface.
+* optimize parameters and feature selections simultaneously.
+* integrate log management and its visualization into search API.
 
-Module List
+To make these simpler, cvopt was created (`GitHub <https://github.com/genfifth/cvopt>`_).
+
+Modules
 ------------------
 .. toctree::
    :includehidden:

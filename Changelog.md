@@ -2,7 +2,7 @@
 
 ## v0.3.X
 * Added new CV class.
-   * BayesoptCV, GAoptCV, SimpleoptCV.
+   * BayesoptCV, GAoptCV, SimpleoptCV, RandomoptCV.
 * Adopt new parameter setting style
    * Available in all cv class.
 
