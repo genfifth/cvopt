@@ -1,32 +1,32 @@
 # cvopt -to simplify Data Science-
-cvopt(cross validation optimizer) is python module for machine learning's parameter search and feature selection, integrated visualization and archive log.   
-This module has API like scikit-learn cross validation class and easy to use.
+cvopt(cross validation optimizer) is python module for machine learning's parameter search and feature selection.
+To simplify modeling, in cvopt, log management and visualization are integrated and the API like scikit-learn is provided.
 
 ![readme_00](https://github.com/genfifth/cvopt/blob/master/etc/images/readme_00.PNG)
 
-In Data Science's modeling, sometime would like to
-* use various search algorithms on the same interface.
-* optimize parameters and feature selections simultaneously.
-* integrate log management and its visualization into search API.
+In Data Science modeling, sometimes would like to ...
+* Use various search algorithms on the same interface.
+* Optimize parameters and feature selections simultaneously.
+* Integrate log management and its visualization into search API.
 
 To make these simpler, cvopt was created.
 
 # Features
-* API like scikit-learn cross validation class.
-   * Support Algorithm
+* API like scikit-learn.
+   * Support Algorithm:
       * Sequential Model Based Global Optimization (Hyperopt)
       * Bayesian Optimization (GpyOpt)
       * Genetic Algorithm
       * Random Search
-* Optimize parameters and feature selections.
-* Integrated log management and its visualization.
+* Optimization of parameters and feature selections.
+* Integration of log management and visualization.
 
 
 # Installation   
 ```bash
 $ pip install git+https://github.com/genfifth/cvopt
 ```
-requires:   
+Requires:   
 * Python3
 * NumPy
 * pandas
