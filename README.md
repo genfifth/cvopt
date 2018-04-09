@@ -1,5 +1,5 @@
 # cvopt -to simplify Data Science-
-cvopt(cross validation optimizer) is python module for machine learning's parameter search and feature selection.
+cvopt (cross validation optimizer) is python module for machine learning's parameter search and feature selection.
 To simplify modeling, in cvopt, log management and visualization are integrated and the API like scikit-learn is provided.
 
 ![readme_00](https://github.com/genfifth/cvopt/blob/master/etc/images/readme_00.PNG)
