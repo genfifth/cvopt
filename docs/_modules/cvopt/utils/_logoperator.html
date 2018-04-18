@@ -155,9 +155,8 @@
   <h1>Source code for cvopt.utils._logoperator</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span><span class="o">,</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">sklearn.externals</span> <span class="k">import</span> <span class="n">joblib</span>
 
-<span class="kn">from</span> <span class="nn">._base</span> <span class="k">import</span> <span class="n">chk_Xy</span>
+<span class="kn">from</span> <span class="nn">._base</span> <span class="k">import</span> <span class="n">chk_Xy</span><span class="p">,</span> <span class="n">make_loader</span><span class="p">,</span> <span class="n">to_label</span>
 <span class="kn">from</span> <span class="nn">..model_selection</span> <span class="k">import</span> <span class="n">_setting</span> <span class="k">as</span> <span class="n">st</span>
 
 
@@ -226,7 +225,7 @@
     
 
 <div class="viewcode-block" id="mk_metafeature"><a class="viewcode-back" href="../../../modules/utils/cvopt.utils.mk_metafeature.html#cvopt.utils.mk_metafeature">[docs]</a><span class="k">def</span> <span class="nf">mk_metafeature</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">logdir</span><span class="p">,</span> <span class="n">model_id</span><span class="p">,</span> <span class="n">target_index</span><span class="p">,</span> <span class="n">cv</span><span class="p">,</span> 
-                   <span class="n">validation_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">feature_groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">estimator_method</span><span class="o">=</span><span class="s2">&quot;predict&quot;</span><span class="p">,</span> <span class="n">merge</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                   <span class="n">validation_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">feature_groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">estimator_method</span><span class="o">=</span><span class="s2">&quot;predict&quot;</span><span class="p">,</span> <span class="n">merge</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">loader</span><span class="o">=</span><span class="s2">&quot;sklearn&quot;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Make meta feature for stacking(https://mlwave.com/kaggle-ensembling-guide/)</span>
 <span class="sd">    </span>
@@ -265,6 +264,13 @@
 <span class="sd">    </span>
 <span class="sd">    merge: bool, default=True.</span>
 <span class="sd">        if True, return matrix which result per cv is merged into.</span>
+
+<span class="sd">    loader: str or function, default=&quot;sklearn&quot;.</span>
+<span class="sd">        estimator`s loader.</span>
+
+<span class="sd">        * `sklearn`: use `sklearn.externals.joblib.load`. Basically for scikit-learn.</span>
+
+<span class="sd">        * function: function whose variable is estimator`s path.</span>
 <span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -272,6 +278,7 @@
 <span class="sd">        When validation_data is input, return tuple.</span>
 <span class="sd">        </span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">loader</span> <span class="o">=</span> <span class="n">make_loader</span><span class="p">(</span><span class="n">loader</span><span class="p">)</span>
     <span class="n">X</span> <span class="o">=</span> <span class="n">chk_Xy</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">none_error</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ravel_1d</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">msg_sjt</span><span class="o">=</span><span class="s2">&quot;X&quot;</span><span class="p">)</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">chk_Xy</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">none_error</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ravel_1d</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">msg_sjt</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">validation_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -291,11 +298,11 @@
     <span class="n">estdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">logdir</span><span class="p">,</span> <span class="s2">&quot;estimators&quot;</span><span class="p">,</span> <span class="n">model_id</span><span class="p">)</span>
     <span class="n">name_prefix</span> <span class="o">=</span> <span class="n">model_id</span> <span class="o">+</span> <span class="s2">&quot;_index&quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">{0:05d}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">target_index</span><span class="p">)</span>
     
-    <span class="c1">#estimator = joblib.load(os.path.join(estdir, name_prefix+&quot;_split&quot;+&quot;{0:02d}&quot;.format(0)+&quot;.pkl&quot;))</span>
+    <span class="c1">#estimator = loader(os.path.join(estdir, name_prefix+&quot;_split&quot;+&quot;{0:02d}&quot;.format(0)))</span>
     <span class="c1">#cv = check_cv(cv, y, classifier=is_classifier(estimator))</span>
     
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">test_index</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cv</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)):</span>
-        <span class="n">estimator</span> <span class="o">=</span> <span class="n">joblib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">estdir</span><span class="p">,</span> <span class="n">name_prefix</span><span class="o">+</span><span class="s2">&quot;_split&quot;</span><span class="o">+</span><span class="s2">&quot;</span><span class="si">{0:02d}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;.pkl&quot;</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">test_index</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cv</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">to_label</span><span class="p">(</span><span class="n">y</span><span class="p">))):</span>
+        <span class="n">estimator</span> <span class="o">=</span> <span class="n">loader</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">estdir</span><span class="p">,</span> <span class="n">name_prefix</span><span class="o">+</span><span class="s2">&quot;_split&quot;</span><span class="o">+</span><span class="s2">&quot;</span><span class="si">{0:02d}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)))</span>
         <span class="n">X_meta</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">estimator</span><span class="p">,</span> <span class="n">estimator_method</span><span class="p">)(</span><span class="n">X</span><span class="p">[</span><span class="n">test_index</span><span class="p">]))</span>
         <span class="n">X_ind</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">test_index</span><span class="p">)</span>
     
@@ -307,7 +314,7 @@
     <span class="k">if</span> <span class="n">validation_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">X_meta</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">estimator</span> <span class="o">=</span> <span class="n">joblib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">estdir</span><span class="p">,</span> <span class="n">name_prefix</span><span class="o">+</span><span class="s2">&quot;_test.pkl&quot;</span><span class="p">))</span>
+        <span class="n">estimator</span> <span class="o">=</span> <span class="n">loader</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">estdir</span><span class="p">,</span> <span class="n">name_prefix</span><span class="o">+</span><span class="s2">&quot;_test&quot;</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">X_meta</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">estimator</span><span class="p">,</span> <span class="n">estimator_method</span><span class="p">)(</span><span class="n">Xvalid</span><span class="p">)</span></div>
 </pre></div>
 

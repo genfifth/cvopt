@@ -1,6 +1,7 @@
 import numpy as np, scipy as sp
 import types
 from hyperopt import hp
+from hyperopt.pyll import scope
 
 class ParamDist(dict):
     """
@@ -90,10 +91,14 @@ def get_params(param_distributions, tgt_key=None):
         return {tgt_key:param_distributions[tgt_key].rvs()}
 
 
+@scope.define
+def hpint(low, high):
+    return max(low, high)
+
 def _conv_hyperopt_param_dist(param_name, param_dist):
     if param_dist["valtype"] == "numeric":
         if param_dist["dtype"] == "int":
-            param_dist = hp.randint(param_name, int(param_dist["high"]))
+            param_dist = scope.hpint(int(param_dist["low"]), hp.randint(param_name, int(param_dist["high"])))
         elif param_dist["dtype"] == "float":
             param_dist = hp.uniform(param_name, 
                                     param_dist["low"], 
@@ -107,7 +112,7 @@ def _conv_gpyopt_param_dist(param_name, param_dist):
     if param_dist["valtype"] == "numeric":
         if param_dist["dtype"] == "int":
             param_dist = {"name":param_name, "type":"discrete", 
-                          "domain":np.arange(int(param_dist["low"]), int(param_dist["high"])+1)}
+                          "domain":np.arange(int(param_dist["low"]), int(param_dist["high"])+1).astype(int)}
         elif param_dist["dtype"] == "float":
             param_dist = {"name":param_name, "type":"continuous", 
                           "domain":(param_dist["low"], param_dist["high"])}         
@@ -163,6 +168,7 @@ def conv_param_distributions(param_distributions, backend):
                     ret[param_name] = param_distributions[param_name]
                 else:
                     raise Exception("parameter_distributions's value must be search_setting.search_numeric, search_setting.search_category, or scipy.stats class.")
+                    
     return ret
 
 
@@ -175,8 +181,10 @@ def decode_params(params, param_distributions, backend):
     elif backend == "bayesopt":
         ret = {}
         for i, param_dist in enumerate(param_distributions):
-            if param_dist["type"]=="categorical":
+            if param_dist["type"] == "categorical":
                 ret[param_dist["name"]] = param_dist["categories"][int(params[0, i])]
+            elif param_dist["type"] == "discrete":
+                ret[param_dist["name"]] = int(params[0, i])
             else:
                 ret[param_dist["name"]] = params[0, i]
         return ret  

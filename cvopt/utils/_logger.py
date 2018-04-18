@@ -373,7 +373,7 @@ class NoteBookVisualizer():
                                           score_source=self.cv_src, score_std_source=self.cv_score_std_src, 
                                           color=NoteBookVisualizer.colors[data_type], legend=data_type)
 
-            display_etime = LabelSet(x=0, y=0, x_offset=80, y_offset=50, 
+            display_etime = LabelSet(x=0, y=0, x_offset=80, y_offset=20, 
                                      x_units="screen", y_units="screen", render_mode="canvas",
                                      text="text", source=self.end_time_src, 
                                      text_font="segoe ui", text_font_style ="italic", 

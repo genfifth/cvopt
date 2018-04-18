@@ -24,6 +24,7 @@ To make these simpler, cvopt was created.
 
 # Installation   
 ```bash
+$ pip install Gpy
 $ pip install git+https://github.com/genfifth/cvopt
 ```
 Requires:   
@@ -46,9 +47,9 @@ opt.fit(Xtrain, ytrain, feature_groups=feature_groups)
 ```
    
 # Documents
-[Basic usage](https://github.com/genfifth/cvopt/blob/master/notebooks/basic_usage.ipynb)
+Basic usage[(eng)](https://github.com/genfifth/cvopt/blob/master/notebooks/basic_usage.ipynb)/[(jp)](https://github.com/genfifth/cvopt/blob/master/notebooks/basic_usage_jp.ipynb)
    
-[Basic usage(jp)](https://github.com/genfifth/cvopt/blob/master/notebooks/basic_usage_jp.ipynb)
+[Keras sample](https://github.com/genfifth/cvopt/blob/master/notebooks/keras_sample.ipynb)
    
 [API Reference](https://genfifth.github.io/cvopt/)
 

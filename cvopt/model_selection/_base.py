@@ -8,12 +8,12 @@ from sklearn.base import BaseEstimator, is_classifier
 from sklearn.metrics import SCORERS, make_scorer
 from sklearn.metrics.scorer import check_scoring
 from sklearn.model_selection import check_cv
-from sklearn.externals.joblib import dump, Parallel, delayed
+from sklearn.externals.joblib import Parallel, delayed
 from hyperopt import STATUS_OK, STATUS_FAIL
 
 from ..model_selection import _setting as st
 from ..search_setting._base import conv_param_distributions, search_category, decode_params
-from ..utils._base import chk_Xy, clone_estimator, compress
+from ..utils._base import chk_Xy, clone_estimator, compress, make_saver, to_label
 from ..utils._logger import CVSummarizer
 
 class BaseSearcher(BaseEstimator, metaclass=ABCMeta):
@@ -35,7 +35,7 @@ class BaseSearcher(BaseEstimator, metaclass=ABCMeta):
 
     def __init__(self, estimator, param_distributions, 
                  scoring, cv, n_jobs, pre_dispatch, 
-                 verbose, logdir, save_estimator, model_id, refit, backend):
+                 verbose, logdir, save_estimator, saver, model_id, refit, backend):
         # BACKLOG: Implement iid option(sklearn GridSearchCV have this option).
         
         self.estimator = estimator
@@ -55,6 +55,7 @@ class BaseSearcher(BaseEstimator, metaclass=ABCMeta):
         self.pre_dispatch = pre_dispatch
         self.logdir = logdir
         self.save_estimator = save_estimator
+        self.saver = saver
         self.backend = backend
 
         if model_id is None:
@@ -304,7 +305,7 @@ def _obj_return(score, succeed, backend):
 
 
 def mk_objfunc(X, y, groups, feature_groups, feature_axis, estimator, scoring, cv, 
-               param_distributions, backend, failedscore, 
+               param_distributions, backend, failedscore, saver, 
                score_summarizer=np.mean, 
                Xvalid=None, yvalid=None, n_jobs=1, pre_dispatch="2*n_jobs", 
                cvsummarizer=None, save_estimator=0, min_n_features=2):
@@ -313,6 +314,7 @@ def mk_objfunc(X, y, groups, feature_groups, feature_axis, estimator, scoring, c
     """
     n_splits_ = cv.get_n_splits()
     cvs = cvsummarizer
+    saver = make_saver(saver)
 
     def obj(params):
         start_time = datetime.now()
@@ -351,7 +353,7 @@ def mk_objfunc(X, y, groups, feature_groups, feature_axis, estimator, scoring, c
                                  y=y, 
                                  train_ind=train_ind, test_ind=test_ind, 
                                  scoring=scoring)
-        for train_ind, test_ind in cv.split(compress(feature_select_ind, X, axis=feature_axis), y, groups))
+        for train_ind, test_ind in cv.split(compress(feature_select_ind, X, axis=feature_axis), to_label(y), groups))
 
         # evaluate validation data
         if Xvalid is None:
@@ -375,13 +377,13 @@ def mk_objfunc(X, y, groups, feature_groups, feature_axis, estimator, scoring, c
                 fit_times.append(k)
                 score_times.append(l)
 
-                dump(m, os.path.join(path, name_prefix+"_split"+"{0:02d}".format(cnt)+".pkl"))
+                saver(m, os.path.join(path, name_prefix+"_split"+"{0:02d}".format(cnt)))
 
             if (save_estimator > 1):
                 if Xvalid is None:
                     estimator_test = clone_estimator(estimator, estimator_params)
                     estimator_test.fit(compress(feature_select_ind, X, axis=feature_axis), y)
-                dump(estimator_test, os.path.join(path, name_prefix+"_test"+".pkl"))
+                saver(estimator_test, os.path.join(path, name_prefix+"_test"))
         else:
             for i, j, k, l, m in ret_p:
                 cv_train_scores.append(i)

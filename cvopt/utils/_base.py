@@ -1,7 +1,7 @@
-import os, copy, warnings, scipy
+import os, copy, warnings, scipy, types
 import pandas as pd, numpy as np
 from sklearn.base import clone
-
+from sklearn.externals.joblib import dump, load
 
 def mk_dir(path, error_level=0, msg=None):
     """
@@ -86,3 +86,37 @@ def compress(condition, a, axis):
             raise ValueError("axis must be 0-4")
     else:
         raise ValueError("input array must be numpy.array or scipy.sparse")
+
+
+def make_saver(saver):
+    if isinstance(saver, types.FunctionType):
+        return saver
+    elif saver == "sklearn":
+        def saver(estimator, path):
+            dump(estimator, path+".pkl")
+    else:
+        raise Exception("saver=" + str(saver)+" is not supported.")
+    return saver
+    
+def make_loader(loader):
+    if isinstance(loader, types.FunctionType):
+        return loader
+    elif loader == "sklearn":
+        def loader(path):
+            return load(path+".pkl")
+    else:
+        raise Exception("loader=" + str(loader)+" is not supported.")
+    return loader
+
+def to_label(y):
+    if (len(y.shape) == 2 and y.shape[1] == 1) or len(y.shape) == 1:
+        return y
+    else:
+        # Supposing y is 1 hot encoding, convert to label.
+        return np.argmax(y, axis=1)
+            
+        
+            
+            
+    
+        

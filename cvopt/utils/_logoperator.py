@@ -1,8 +1,7 @@
 import os, warnings
 import pandas as pd, numpy as np
-from sklearn.externals import joblib
 
-from ._base import chk_Xy
+from ._base import chk_Xy, make_loader, to_label
 from ..model_selection import _setting as st
 
 
@@ -71,7 +70,7 @@ def extract_params(logdir, model_id, target_index, feature_groups=None):
     
 
 def mk_metafeature(X, y, logdir, model_id, target_index, cv, 
-                   validation_data=None, feature_groups=None, estimator_method="predict", merge=True):
+                   validation_data=None, feature_groups=None, estimator_method="predict", merge=True, loader="sklearn"):
     """
     Make meta feature for stacking(https://mlwave.com/kaggle-ensembling-guide/)
     
@@ -110,6 +109,13 @@ def mk_metafeature(X, y, logdir, model_id, target_index, cv,
     
     merge: bool, default=True.
         if True, return matrix which result per cv is merged into.
+
+    loader: str or function, default="sklearn".
+        estimator`s loader.
+
+        * `sklearn`: use `sklearn.externals.joblib.load`. Basically for scikit-learn.
+
+        * function: function whose variable is estimator`s path.
     
     Returns
     -------
@@ -117,6 +123,7 @@ def mk_metafeature(X, y, logdir, model_id, target_index, cv,
         When validation_data is input, return tuple.
         
     """
+    loader = make_loader(loader)
     X = chk_Xy(X, none_error=True, ravel_1d=False, msg_sjt="X")
     y = chk_Xy(y, none_error=False, ravel_1d=True, msg_sjt="y")
     if validation_data is not None:
@@ -136,11 +143,11 @@ def mk_metafeature(X, y, logdir, model_id, target_index, cv,
     estdir = os.path.join(logdir, "estimators", model_id)
     name_prefix = model_id + "_index" + "{0:05d}".format(target_index)
     
-    #estimator = joblib.load(os.path.join(estdir, name_prefix+"_split"+"{0:02d}".format(0)+".pkl"))
+    #estimator = loader(os.path.join(estdir, name_prefix+"_split"+"{0:02d}".format(0)))
     #cv = check_cv(cv, y, classifier=is_classifier(estimator))
     
-    for i, (_, test_index) in enumerate(cv.split(X, y)):
-        estimator = joblib.load(os.path.join(estdir, name_prefix+"_split"+"{0:02d}".format(i)+".pkl"))
+    for i, (_, test_index) in enumerate(cv.split(X, to_label(y))):
+        estimator = loader(os.path.join(estdir, name_prefix+"_split"+"{0:02d}".format(i)))
         X_meta.append(getattr(estimator, estimator_method)(X[test_index]))
         X_ind.append(test_index)
     
@@ -152,5 +159,5 @@ def mk_metafeature(X, y, logdir, model_id, target_index, cv,
     if validation_data is None:
         return X_meta
     else:
-        estimator = joblib.load(os.path.join(estdir, name_prefix+"_test.pkl"))
+        estimator = loader(os.path.join(estdir, name_prefix+"_test"))
         return X_meta, getattr(estimator, estimator_method)(Xvalid)
