@@ -6,8 +6,9 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestRegressor
 
 from bokeh import layouts
-from bokeh.io import output_notebook, push_notebook, show
+from bokeh.io import output_file, output_notebook, push_notebook, show, save
 from bokeh.plotting import figure, ColumnDataSource
+from bokeh.resources import INLINE
 from bokeh.models import HoverTool, SaveTool, WheelZoomTool, ResetTool, PanTool, BoxZoomTool, LabelSet, CustomJS
 from bokeh.models.ranges import DataRange1d, FactorRange
 from bokeh.models.widgets import Div
@@ -42,14 +43,22 @@ class CVSummarizer:
         self.verbose = verbose
         self.save_estimator = save_estimator
         self.logdir = logdir
-        if self.logdir is not None:
+        if self.logdir is None:
+            self.save_path = None
+            self.save_graph_path = None
+        else:
             path = os.path.join(self.logdir, "cv_results")
             mk_dir(path, error_level=0)
-            self.save_path = os.path.join(path, str(self.model_id))
+            self.save_path = os.path.join(path, str(self.model_id)+".csv")
+
+            path = os.path.join(self.logdir, "cv_results_graph")
+            mk_dir(path, error_level=0)
+            self.save_graph_path = os.path.join(path, str(self.model_id)+".html")
             
             if (save_estimator > 0):
                 mk_dir(os.path.join(self.logdir, "estimators", self.model_id), 
                     error_level=1, msg="save in this directory.")
+        
 
         self.params_keys = ["param_" + str(i) for i in paraname_list]
         self.train_score_keys = ["split"+str(i)+"_train_score" for i in range(cvsize)]
@@ -73,9 +82,9 @@ class CVSummarizer:
     def _save(self):
         if self.logdir is not None:    
             if len(pd.DataFrame(self.cv_results_)) == 1:
-                if os.path.isfile(self.save_path+".csv"):
-                    warnings.warn("A log file(%s) is already exist. cv result is append to this file" %self.save_path+".csv")
-            pd.DataFrame(self.cv_results_).iloc[[-1]].to_csv(self.save_path+".csv", index=False, encoding="cp932", 
+                if os.path.isfile(self.save_path):
+                    warnings.warn("A log file(%s) is already exist. cv result is append to this file" %self.save_path)
+            pd.DataFrame(self.cv_results_).iloc[[-1]].to_csv(self.save_path, index=False, encoding="cp932", 
                                                              mode="a", header=(len(pd.DataFrame(self.cv_results_))==1))
 
     def _init_score(self, cv_train_scores, cv_test_scores, train_score, validation_score):
@@ -182,7 +191,8 @@ class CVSummarizer:
             elif self.verbose == 2:
                 if self.nbv is None:
                     if n_search > 0:
-                        self.nbv = NoteBookVisualizer(cv_results_cols=self.cv_results_.keys(), sign=self.sign, valid=self.valid)
+                        self.nbv = NoteBookVisualizer(cv_results_cols=self.cv_results_.keys(), sign=self.sign, valid=self.valid, 
+                                                      savepath=self.save_graph_path)
                 else:
                     self.nbv.fit(cv_results=self.cv_results_, estimeted_end_time=estimated_end_time)
             
@@ -324,8 +334,7 @@ class NoteBookVisualizer():
         
         return cv_results, cv_score_std, param_dists
     
-    def __init__(self, cv_results_cols, sign, valid):
-        self.sign = sign
+    def __init__(self, cv_results_cols, sign, valid, savepath):
         if valid:
             self.data_types = ["train", "test", "valid"]
         else:
@@ -336,6 +345,11 @@ class NoteBookVisualizer():
         self.param_cols = list(set(self.all_param_cols)-set(self.param_feature_cols))
         self.param_cols.sort()
         
+        self.sign = sign
+        self.cv_results_cols = cv_results_cols
+        self.valid = valid
+        self.savepath = savepath
+
         self.bokeh_handle = None
         
     def fit(self, cv_results, estimeted_end_time):
@@ -450,10 +464,10 @@ class NoteBookVisualizer():
 
             scores_headline = Div(text=NoteBookVisualizer.headline.replace("TEXT", " Score History"), width=int(NoteBookVisualizer.display_width*0.9))
             params_headline = Div(text=NoteBookVisualizer.headline.replace("TEXT", " Parameter History"), width=int(NoteBookVisualizer.display_width*0.9))
-            p = layouts.layout([[scores_headline]]+[[cv_p, best_p]]+[[params_headline]]+\
+            self.p = layouts.layout([[scores_headline]]+[[cv_p, best_p]]+[[params_headline]]+\
                                [list(param_vbar_ps.values())[i:i+NoteBookVisualizer.n_col_param] for i in range(0, len(param_vbar_ps), NoteBookVisualizer.n_col_param)]+\
                                [list(param_hist_ps.values())[i:i+NoteBookVisualizer.n_col_param] for i in range(0, len(param_hist_ps), NoteBookVisualizer.n_col_param)])
-            self.bokeh_handle = show(p, notebook_handle=True)
+            self.bokeh_handle = show(self.p, notebook_handle=True)
         else:
             # update bokeh src
             self.end_time_src.patch({"text":[(0, "This search end time(estimated): "+estimeted_end_time)]})
@@ -466,4 +480,7 @@ class NoteBookVisualizer():
 
                 self._update_cv_score_std_src(cv_score_std)
                 self._update_param_srcs(param_dists)
+
+            if self.savepath is not None:
+                save(self.p, filename=self.savepath, resources=INLINE)
 

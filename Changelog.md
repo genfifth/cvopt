@@ -6,6 +6,7 @@
 * Adopt new parameter setting style
    * Available in all cv class.
 * Added Keras sample
+* Added graph output
 
 ## v0.2.X
 * Added API Reference

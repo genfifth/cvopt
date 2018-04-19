@@ -65,6 +65,12 @@ class SimpleoptCV():
         | |-{model_id}.csv                                      : search log
         
         | ...
+
+        |-cv_results_graph
+        
+        | |-{model_id}.html                                     : search log(graph)
+        
+        | ...
         
         |-estimators_{model_id}
         
@@ -218,6 +224,12 @@ class HyperoptCV(BaseSearcher):
         |-cv_results
         
         | |-{model_id}.csv                                      : search log
+        
+        | ...
+
+        |-cv_results_graph
+        
+        | |-{model_id}.html                                     : search log(graph)
         
         | ...
         
@@ -395,6 +407,12 @@ class BayesoptCV(BaseSearcher):
         |-cv_results
         
         | |-{model_id}.csv                                      : search log
+        
+        | ...
+
+        |-cv_results_graph
+        
+        | |-{model_id}.html                                     : search log(graph)
         
         | ...
         
@@ -684,6 +702,12 @@ class GAoptCV(BaseSearcher):
         | |-{model_id}.csv                                      : search log
         
         | ...
+
+        |-cv_results_graph
+        
+        | |-{model_id}.html                                     : search log(graph)
+        
+        | ...
         
         |-estimators_{model_id}
         
@@ -889,6 +913,12 @@ class RandomoptCV(BaseSearcher):
         |-cv_results
         
         | |-{model_id}.csv                                      : search log
+        
+        | ...
+
+        |-cv_results_graph
+        
+        | |-{model_id}.html                                     : search log(graph)
         
         | ...
         
