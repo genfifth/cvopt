@@ -13,7 +13,7 @@ from hyperopt import STATUS_OK, STATUS_FAIL
 
 from ..model_selection import _setting as st
 from ..search_setting._base import conv_param_distributions, search_category, decode_params
-from ..utils._base import chk_Xy, clone_estimator, compress, make_saver, to_label
+from ..utils._base import chk_Xy, make_cloner, compress, make_saver, to_label
 from ..utils._logger import CVSummarizer
 
 class BaseSearcher(BaseEstimator, metaclass=ABCMeta):
@@ -35,7 +35,7 @@ class BaseSearcher(BaseEstimator, metaclass=ABCMeta):
 
     def __init__(self, estimator, param_distributions, 
                  scoring, cv, n_jobs, pre_dispatch, 
-                 verbose, logdir, save_estimator, saver, model_id, refit, backend):
+                 verbose, logdir, save_estimator, saver, model_id, cloner, refit, backend):
         # BACKLOG: Implement iid option(sklearn GridSearchCV have this option).
         
         self.estimator = estimator
@@ -56,6 +56,9 @@ class BaseSearcher(BaseEstimator, metaclass=ABCMeta):
         self.logdir = logdir
         self.save_estimator = save_estimator
         self.saver = saver
+        self.cloner = cloner
+        self._cloner =  make_cloner(cloner)
+
         self.backend = backend
 
         if model_id is None:
@@ -89,24 +92,28 @@ class BaseSearcher(BaseEstimator, metaclass=ABCMeta):
         
         self._cvs = CVSummarizer(paraname_list=param_distributions.keys(), cvsize=self.n_splits_, 
                                  score_summarizer=BaseSearcher.score_summarizer, score_summarizer_name=BaseSearcher.score_summarizer_name, 
-                                 valid=valid, sign=self.sign, model_id=self.model_id, verbose=self.verbose, 
-                                 save_estimator=self.save_estimator, logdir=self.logdir)
+                                 valid=valid, sign=self.sign, model_id=self.model_id, search_algo=self.search_algo, 
+                                 verbose=self.verbose, save_estimator=self.save_estimator, logdir=self.logdir)
         self.cv_results_ = self._cvs()
 
         return X, y, Xvalid, yvalid, cv, conv_param_distributions(param_distributions, backend=self.backend)
 
 
     def _postproc_fit(self, X, y, feature_groups, best_params, best_score):
+        if self._cvs.nbv is not None:
+            self._cvs.nbv.close(search_algo=str(self.cv_results_["search_algo"][0]), 
+                                n_iter=int(self.cv_results_["index"][-1]))
+                                
         self.best_params_ = best_params
         self.best_score_ = best_score
         
         if self.refit:
             if self._feature_select:
                 self.feature_select_ind, _, estimator_params = mk_feature_select_index(self.best_params_, feature_groups, verbose=1)
-                self.best_estimator_ = clone_estimator(self.estimator, estimator_params)
+                self.best_estimator_ = self._cloner(self.estimator, estimator_params)
             else:
                 self.feature_select_ind = np.array([True]*X.shape[BaseSearcher.feature_axis])
-                self.best_estimator_ = clone_estimator(self.estimator, self.best_params_)
+                self.best_estimator_ = self._cloner(self.estimator, self.best_params_)
             if y is None:
                 self.best_estimator_.fit(compress(self.feature_select_ind, X, axis=BaseSearcher.feature_axis))
             else:
@@ -114,11 +121,32 @@ class BaseSearcher(BaseEstimator, metaclass=ABCMeta):
         if self.verbose == 1:
             sys.stdout.write("\n\rBest_score(finished):%s" %np.round(self.best_score_, 2))
 
-    def _random_scoring(self, y):
-        score = []
-        for i in range(10):
-            score.append(self.scoring._sign*self.scoring._score_func(y, np.random.permutation(y)))
-        return np.median(score)
+    def _random_scoring(self, X, y):
+        try:
+            # calculate random score without estimator.
+            score = []
+            for i in range(10):
+                score.append(self.scoring._sign*self.scoring._score_func(y, np.random.permutation(y)))
+            score = np.array(score)
+            score[np.isinf(score)] = np.nan
+            score = np.nanmedian(score)
+        except:
+            try:
+                # calculate random score with estimator.
+                score = []
+                random_estimator = self.cloner(self.estimator, params={})
+                random_estimator.fit(X, y)
+                for i in range(10):
+                    score.append(self.scoring(random_estimator, X, np.random.permutation(y)))
+                score = np.array(score)
+                score[np.isinf(score)] = np.nan
+                score = np.nanmedian(score)
+            except:
+                score = np.nan
+
+        if np.isnan(score):
+            score = self.scoring._sign*st.RANDOM_SCORE
+        return score
 
     @if_delegate_has_method(delegate=("best_estimator_", "estimator"))
     def predict(self, X):
@@ -293,6 +321,17 @@ def fit_and_score(estimator, X, y, scoring, train_ind=None, test_ind=None, test_
 
 
 def _obj_return(score, succeed, backend):
+    """
+    Differences in the type of score (greater is better or not) are absorbed by sklearn like scoring function.
+    So, input for the minimization function is -1 * score function output.
+
+    Example
+    ---------- 
+    greater_is_better=True: score function output = 1*score
+
+    greater_is_better=False: score function output = -1*score
+    """
+
     if backend == "hyperopt":
         if succeed:
             return {"loss":-1.0*score, "status":STATUS_OK}
@@ -305,7 +344,7 @@ def _obj_return(score, succeed, backend):
 
 
 def mk_objfunc(X, y, groups, feature_groups, feature_axis, estimator, scoring, cv, 
-               param_distributions, backend, failedscore, saver, 
+               param_distributions, backend, failedscore, saver, cloner, 
                score_summarizer=np.mean, 
                Xvalid=None, yvalid=None, n_jobs=1, pre_dispatch="2*n_jobs", 
                cvsummarizer=None, save_estimator=0, min_n_features=2):
@@ -348,7 +387,7 @@ def mk_objfunc(X, y, groups, feature_groups, feature_axis, estimator, scoring, c
 
         ret_p = Parallel(
             n_jobs=n_jobs, pre_dispatch=pre_dispatch, 
-        )(delayed(fit_and_score)(estimator=clone_estimator(estimator, estimator_params), 
+        )(delayed(fit_and_score)(estimator=cloner(estimator, estimator_params), 
                                  X=compress(feature_select_ind, X, axis=feature_axis),  
                                  y=y, 
                                  train_ind=train_ind, test_ind=test_ind, 
@@ -360,7 +399,7 @@ def mk_objfunc(X, y, groups, feature_groups, feature_axis, estimator, scoring, c
             train_score, validation_score = np.nan, np.nan
         else:
             train_score, validation_score, _, _, estimator_test = fit_and_score(
-                estimator=clone_estimator(estimator, estimator_params), 
+                estimator=cloner(estimator, estimator_params), 
                 X=compress(feature_select_ind, X, axis=feature_axis),  
                 y=y, 
                 test_data=(compress(feature_select_ind, Xvalid, axis=feature_axis), yvalid), 
@@ -381,7 +420,7 @@ def mk_objfunc(X, y, groups, feature_groups, feature_axis, estimator, scoring, c
 
             if (save_estimator > 1):
                 if Xvalid is None:
-                    estimator_test = clone_estimator(estimator, estimator_params)
+                    estimator_test = cloner(estimator, estimator_params)
                     estimator_test.fit(compress(feature_select_ind, X, axis=feature_axis), y)
                 saver(estimator_test, os.path.join(path, name_prefix+"_test"))
         else:

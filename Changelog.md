@@ -1,4 +1,7 @@
 # Changelog
+## v0.4.X
+* supported export graph.
+
 
 ## v0.3.X
 * Added new CV class.

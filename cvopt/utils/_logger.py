@@ -15,6 +15,8 @@ from bokeh.models.widgets import Div
 
 from ._base import mk_dir
 from ..model_selection import _setting as st
+from ._html import arrang_graph_file
+from ..utils  import _htmlsrc as hs
 
 class CVSummarizer:
     """
@@ -33,29 +35,31 @@ class CVSummarizer:
         Flag whether greater is better or not.
     """
     def __init__(self, paraname_list, cvsize, score_summarizer, score_summarizer_name, valid, 
-                 sign, model_id, verbose, save_estimator, logdir=None):
+                 sign, model_id, search_algo, verbose, save_estimator, logdir=None):
         self.score_summarizer = score_summarizer
         self.score_summarizer_name = str(score_summarizer_name)
         self.valid = valid
         self.sign = sign
         self.model_id = str(model_id)
+        self.search_algo = str(search_algo)
 
         self.verbose = verbose
         self.save_estimator = save_estimator
         self.logdir = logdir
-        if self.logdir is None:
-            self.save_path = None
-            self.save_graph_path = None
-        else:
+
+        self.save_path = None
+        self.save_graph_path = None
+        if self.logdir is not None:
             path = os.path.join(self.logdir, "cv_results")
             mk_dir(path, error_level=0)
             self.save_path = os.path.join(path, str(self.model_id)+".csv")
 
-            path = os.path.join(self.logdir, "cv_results_graph")
-            mk_dir(path, error_level=0)
-            self.save_graph_path = os.path.join(path, str(self.model_id)+".html")
+            if self.verbose == 2:
+                path = os.path.join(self.logdir, "cv_results_graph")
+                mk_dir(path, error_level=0)
+                self.save_graph_path = os.path.join(path, str(self.model_id)+".html")
             
-            if (save_estimator > 0):
+            if self.save_estimator > 0:
                 mk_dir(os.path.join(self.logdir, "estimators", self.model_id), 
                     error_level=1, msg="save in this directory.")
         
@@ -149,6 +153,7 @@ class CVSummarizer:
             self._store("elapsed_time_sec", np.nan)
 
         self._store("model_id", self.model_id)
+        self._store("search_algo", self.search_algo)
         self._save()
         self._update_best()
 
@@ -192,7 +197,7 @@ class CVSummarizer:
                 if self.nbv is None:
                     if n_search > 0:
                         self.nbv = NoteBookVisualizer(cv_results_cols=self.cv_results_.keys(), sign=self.sign, valid=self.valid, 
-                                                      savepath=self.save_graph_path)
+                                                      model_id=self.model_id, savepath=self.save_graph_path)
                 else:
                     self.nbv.fit(cv_results=self.cv_results_, estimeted_end_time=estimated_end_time)
             
@@ -209,6 +214,11 @@ class NoteBookVisualizer():
     display_width = 950
     n_col_param = 5
     stream_rollover = 256
+    title = """
+            <div style="font-family:segoe ui, sans-serif; font-style:italic; color:#1987E5; padding:0px;">
+            <font style="font-size:xx-large;"> Search Results</font>
+            <font style="font-size:large;"> - TEXT -</font></div>
+            """
     headline = """
                <div style="font-family:segoe ui, sans-serif; font-style:italic; font-size:x-large; 
                border-bottom:solid 2.5px #7f7f7f; color:#1987E5; padding-bottom: 3px;">TEXT</div>
@@ -275,6 +285,9 @@ class NoteBookVisualizer():
         p.yaxis.axis_label_text_font_style = "normal"
         p.axis.major_label_text_font = "segoe ui"
         p.legend.click_policy="hide"
+        p.background_fill_alpha = 0.7
+        p.border_fill_alpha = 0.7
+        p.legend.background_fill_alpha = 0.7
         return p
     
     def _init_cv_results(self, cv_results):
@@ -334,7 +347,7 @@ class NoteBookVisualizer():
         
         return cv_results, cv_score_std, param_dists
     
-    def __init__(self, cv_results_cols, sign, valid, savepath):
+    def __init__(self, cv_results_cols, sign, valid, model_id, savepath):
         if valid:
             self.data_types = ["train", "test", "valid"]
         else:
@@ -348,6 +361,7 @@ class NoteBookVisualizer():
         self.sign = sign
         self.cv_results_cols = cv_results_cols
         self.valid = valid
+        self.model_id = str(model_id)
         self.savepath = savepath
 
         self.bokeh_handle = None
@@ -461,10 +475,10 @@ class NoteBookVisualizer():
                     param_hist_ps[param_col].yaxis.minor_tick_line_color = None 
                     param_hist_ps[param_col] = self._arrange_fig(param_hist_ps[param_col])
                     
-
+            title = Div(text=NoteBookVisualizer.title.replace("TEXT", self.model_id), width=int(NoteBookVisualizer.display_width))
             scores_headline = Div(text=NoteBookVisualizer.headline.replace("TEXT", " Score History"), width=int(NoteBookVisualizer.display_width*0.9))
             params_headline = Div(text=NoteBookVisualizer.headline.replace("TEXT", " Parameter History"), width=int(NoteBookVisualizer.display_width*0.9))
-            self.p = layouts.layout([[scores_headline]]+[[cv_p, best_p]]+[[params_headline]]+\
+            self.p = layouts.layout([title, [scores_headline]]+[[cv_p, best_p]]+[[params_headline]]+\
                                [list(param_vbar_ps.values())[i:i+NoteBookVisualizer.n_col_param] for i in range(0, len(param_vbar_ps), NoteBookVisualizer.n_col_param)]+\
                                [list(param_hist_ps.values())[i:i+NoteBookVisualizer.n_col_param] for i in range(0, len(param_hist_ps), NoteBookVisualizer.n_col_param)])
             self.bokeh_handle = show(self.p, notebook_handle=True)
@@ -482,5 +496,16 @@ class NoteBookVisualizer():
                 self._update_param_srcs(param_dists)
 
             if self.savepath is not None:
-                save(self.p, filename=self.savepath, resources=INLINE)
+                self._save_graph(search_algo=str(cv_results["search_algo"].iloc[0]), n_iter=int(cv_results["index"].iloc[-1]))
 
+    def _save_graph(self, search_algo, n_iter):
+        save(self.p, filename=self.savepath, resources=INLINE)
+        arrang_graph_file(graph=self.savepath, model_id=self.model_id, 
+                          add_head=hs.additional_head, pjs=hs.pjs, 
+                          search_algo=search_algo, n_iter=n_iter)
+
+    def close(self, search_algo, n_iter):
+        self.end_time_src.patch({"text":[(0, "This search end time(estimated): finished")]})  
+        push_notebook(handle=self.bokeh_handle) 
+        if self.savepath is not None:
+            self._save_graph(search_algo=search_algo, n_iter=n_iter)

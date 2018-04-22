@@ -56,18 +56,6 @@ def chk_Xy(Xy, none_error, ravel_1d, msg_sjt):
 
     raise TypeError(msg_sjt+base_msg)
 
-
-def clone_estimator(estimator, params):
-    """
-    Clone estimator and set params.
-    """
-    try:
-        estimator = clone(estimator).set_params(**params)
-    except RuntimeError:
-        estimator = copy.deepcopy(estimator).set_params(**params)
-    return estimator
-
-
 def compress(condition, a, axis):
     if isinstance(a, np.ndarray):
         return np.compress(condition=condition, a=a, axis=axis)
@@ -87,6 +75,22 @@ def compress(condition, a, axis):
     else:
         raise ValueError("input array must be numpy.array or scipy.sparse")
 
+
+def make_cloner(cloner):
+    if isinstance(cloner, types.FunctionType):
+        def clone_estimator(estimator, params):
+            estimator = cloner(estimator).set_params(**params)
+            return estimator
+    elif cloner == "sklearn":
+        def clone_estimator(estimator, params):
+            try:
+                estimator = clone(estimator).set_params(**params)
+            except RuntimeError:
+                estimator = copy.deepcopy(estimator).set_params(**params)
+            return estimator
+    else:
+        raise Exception("cloner=" + str(cloner)+" is not supported.")
+    return clone_estimator
 
 def make_saver(saver):
     if isinstance(saver, types.FunctionType):
@@ -114,9 +118,11 @@ def to_label(y):
     else:
         # Supposing y is 1 hot encoding, convert to label.
         return np.argmax(y, axis=1)
-            
-        
-            
+
+
+def scale(val, from_range, to_range):
+    tmp = (val - from_range[0]) / (from_range[1] - from_range[0])
+    return tmp * (to_range[1]- to_range[0]) + to_range[0]
             
     
         
