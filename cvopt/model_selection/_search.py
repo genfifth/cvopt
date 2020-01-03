@@ -334,7 +334,7 @@ class HyperoptCV(BaseSearcher):
         self.search_algo = "hyperopt"
 
     def fit(self, X, y=None, validation_data=None, groups=None, 
-            feature_groups=None, min_n_features=2):
+            feature_groups=None, min_n_features=2, *args, **kwargs):
         """
         Run fit.
 
@@ -375,7 +375,7 @@ class HyperoptCV(BaseSearcher):
                          cvsummarizer=self._cvs, save_estimator=self.save_estimator, min_n_features=min_n_features)
 
         try :
-            fmin(obj, param_distributions, algo=self.algo, max_evals=self.max_iter, rstate=self.random_state)
+            fmin(obj, param_distributions, algo=self.algo, max_evals=self.max_iter, rstate=self.random_state, *args, **kwargs)
         except KeyboardInterrupt:
             pass
 
@@ -626,7 +626,7 @@ class BayesoptCV(BaseSearcher):
         self.search_algo = "bayesopt"
 
     def fit(self, X, y=None, validation_data=None, groups=None, 
-            feature_groups=None, min_n_features=2):
+            feature_groups=None, min_n_features=2, *args, **kwargs):
         """
         Run fit.
 
@@ -683,7 +683,7 @@ class BayesoptCV(BaseSearcher):
                                         maximize=False, de_duplication=False)   
 
         try :
-            self.opt.run_optimization(max_iter=self.max_iter, max_time=self.max_time)
+            self.opt.run_optimization(max_iter=self.max_iter, max_time=self.max_time, *args, **kwargs)
         except KeyboardInterrupt:
             pass
         
@@ -865,7 +865,7 @@ class GAoptCV(BaseSearcher):
         self.search_algo = "gaopt"
 
     def fit(self, X, y=None, validation_data=None, groups=None, 
-            feature_groups=None, min_n_features=2):
+            feature_groups=None, min_n_features=2, *args, **kwargs):
         """
         Run fit.
 
@@ -909,7 +909,7 @@ class GAoptCV(BaseSearcher):
         try :
             gamin(obj, param_distributions, max_iter=self.max_iter, iter_pergeneration=self.iter_pergeneration, 
                   param_crossover_proba=self.param_crossover_proba, param_mutation_proba=self.param_mutation_proba, 
-                  random_sampling_proba=self.random_sampling_proba, cvsummarizer=self._cvs)
+                  random_sampling_proba=self.random_sampling_proba, cvsummarizer=self._cvs, *args, **kwargs)
         except KeyboardInterrupt:
             pass
 
@@ -1060,7 +1060,7 @@ class RandomoptCV(BaseSearcher):
         self.search_algo = "randomopt"
 
     def fit(self, X, y=None, validation_data=None, groups=None, 
-            feature_groups=None, min_n_features=2):
+            feature_groups=None, min_n_features=2, *args, **kwargs):
         """
         Run fit.
 
@@ -1104,7 +1104,7 @@ class RandomoptCV(BaseSearcher):
         try :
             gamin(obj, param_distributions, max_iter=self.max_iter, iter_pergeneration=1, 
                   param_crossover_proba=0, param_mutation_proba=0, 
-                  random_sampling_proba=1, cvsummarizer=self._cvs)
+                  random_sampling_proba=1, cvsummarizer=self._cvs, *args, **kwargs)
         except KeyboardInterrupt:
             pass
 
