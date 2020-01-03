@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
         name             = "cvopt",
-        version          = "0.4.1",
+        version          = "0.4.2",
         description      = "Parameter search and feature selection's class, Integrated visualization and archive log.",
         license          = "BSD-2-Clause",
         author           = "gen/5",
