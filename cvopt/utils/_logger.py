@@ -164,7 +164,8 @@ class CVSummarizer:
         df[strcols] = df[strcols].fillna("none")
         le = LabelEncoder()
         for strcol in strcols:
-            df.loc[:, strcol] = le.fit_transform(df.loc[:, strcol].tolist())
+            df.loc[:, strcol] = le.fit_transform([str(i) for i in df.loc[:, strcol].tolist()])
+            # [str(i) for ...] : for object but not str col (e.g. dictionary)
 
         Xtrain = df.iloc[:df.index.max()].dropna(axis=0, inplace=False)
         Xtest = df.iloc[[df.index.max()]].dropna(axis=0, inplace=False)
@@ -326,6 +327,7 @@ class NoteBookVisualizer():
                                                                     top=cv_results[self.param_feature_cols].sum(0).values.tolist())
         for param_col in self.param_cols:
             if cv_results[param_col].dtypes == "object":
+                cv_results[param_col] = cv_results[param_col].astype(str) # for object but not str col (e.g. dictionary)
                 vc = cv_results[param_col].value_counts(dropna=False).sort_index()
                 obj_param_dist = dict(label=vc.index.fillna("none").tolist(), top=vc.values.tolist())
                 try:
